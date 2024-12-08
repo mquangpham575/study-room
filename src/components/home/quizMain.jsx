@@ -1,27 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './quizMain.css';
-
-const initialQuestions = [
-  {
-    questionText: 'What is the capital of France?',
-    answerOptions: [
-      { answerText: 'New York', isCorrect: false },
-      { answerText: 'London', isCorrect: false },
-      { answerText: 'Paris', isCorrect: true },
-      { answerText: 'Dublin', isCorrect: false },
-    ],
-  },
-  {
-    questionText: 'Which continent has the highest number of countries?',
-    answerOptions: [
-      { answerText: 'Asia', isCorrect: false },
-      { answerText: 'Europe', isCorrect: false },
-      { answerText: 'North America', isCorrect: false },
-      { answerText: 'Africa', isCorrect: true },
-    ],
-  },
-  // Add more initial questions here
-];
+import { db } from '../dblibs/firebase-config';
+import { collection, addDoc, getDocs } from 'firebase/firestore';
 
 const Timer = ({ seconds, onTimeUp, isActive }) => {
   const [timeLeft, setTimeLeft] = useState(seconds);
@@ -88,6 +68,13 @@ const Quiz = ({ questions, onStartQuiz, isQuizStarted, onTryAgain }) => {
             <button className='try-again-button' onClick={handleTryAgain}>Try Again</button>
           </div>
         </div>
+      ) : questions.length === 0 ? (
+        <div className='no-questions'>
+          Please add question first!
+          <div>
+            <button className='try-again-button' onClick={handleTryAgain}>Back</button>
+          </div>
+        </div>
       ) : (
         <>
           <div className='question-section'>
@@ -147,9 +134,18 @@ const AddQuestionForm = ({ onAddQuestion, isQuizStarted }) => {
     setAnswerOptions(newAnswerOptions);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    onAddQuestion({ questionText, answerOptions });
+    const newQuestion = { questionText, answerOptions };
+    onAddQuestion(newQuestion);
+
+    try {
+      await addDoc(collection(db, 'questions'), newQuestion);
+      console.log('Question added to Firebase');
+    } catch (error) {
+      console.error('Error adding question to Firebase: ', error);
+    }
+
     setQuestionText('');
     setAnswerOptions([
       { answerText: '', isCorrect: false },
@@ -199,8 +195,18 @@ const AddQuestionForm = ({ onAddQuestion, isQuizStarted }) => {
 };
 
 export function QuizApp() {
-  const [questions, setQuestions] = useState(initialQuestions);
+  const [questions, setQuestions] = useState([]);
   const [isQuizStarted, setIsQuizStarted] = useState(false);
+
+  useEffect(() => {
+    const fetchQuestions = async () => {
+      const querySnapshot = await getDocs(collection(db, 'questions'));
+      const fetchedQuestions = querySnapshot.docs.map(doc => doc.data());
+      setQuestions(fetchedQuestions);
+    };
+
+    fetchQuestions();
+  }, []);
 
   const addQuestion = (newQuestion) => {
     setQuestions([...questions, newQuestion]);
