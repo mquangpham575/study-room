@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './quizMain.css';
 
-const questions = [
+const initialQuestions = [
   {
     questionText: 'What is the capital of France?',
     answerOptions: [
@@ -20,7 +20,7 @@ const questions = [
       { answerText: 'Africa', isCorrect: true },
     ],
   },
-  // Add more questions here
+  // Add more initial questions here
 ];
 
 const Timer = ({ seconds, onTimeUp, isActive }) => {
@@ -42,17 +42,14 @@ const Timer = ({ seconds, onTimeUp, isActive }) => {
   return <div>Time left: {timeLeft}s</div>;
 };
 
-const Quiz = () => {
+const Quiz = ({ questions, onStartQuiz, isQuizStarted, onTryAgain }) => {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [showScore, setShowScore] = useState(false);
   const [score, setScore] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState(null);
-  const [isCorrectAnswer, setIsCorrectAnswer] = useState(null);
-  const [isQuizStarted, setIsQuizStarted] = useState(false);
 
   const handleAnswerOptionClick = (isCorrect, index) => {
     setSelectedAnswer(index);
-    setIsCorrectAnswer(isCorrect);
     if (isCorrect) {
       setScore(score + 1);
     }
@@ -63,7 +60,6 @@ const Quiz = () => {
     if (nextQuestion < questions.length) {
       setCurrentQuestion(nextQuestion);
       setSelectedAnswer(null);
-      setIsCorrectAnswer(null);
     } else {
       setShowScore(true);
     }
@@ -73,17 +69,24 @@ const Quiz = () => {
     setShowScore(true);
   };
 
-  const handleStartQuiz = () => {
-    setIsQuizStarted(true);
+  const handleTryAgain = () => {
+    setCurrentQuestion(0);
+    setShowScore(false);
+    setScore(0);
+    setSelectedAnswer(null);
+    onTryAgain();
   };
 
   return (
     <div className='app'>
       {!isQuizStarted ? (
-        <button className = 'start-quiz-button' onClick={handleStartQuiz}>Start Quiz</button>
+        <button className='start-quiz-button' onClick={onStartQuiz}>Start Quiz</button>
       ) : showScore ? (
         <div className='score-section'>
           You scored {score} out of {questions.length}
+          <div>
+            <button className='try-again-button' onClick={handleTryAgain}>Try Again</button>
+          </div>
         </div>
       ) : (
         <>
@@ -121,10 +124,105 @@ const Quiz = () => {
   );
 };
 
+const AddQuestionForm = ({ onAddQuestion, isQuizStarted }) => {
+  const [questionText, setQuestionText] = useState('');
+  const [answerOptions, setAnswerOptions] = useState([
+    { answerText: '', isCorrect: false },
+    { answerText: '', isCorrect: false },
+    { answerText: '', isCorrect: false },
+    { answerText: '', isCorrect: false },
+  ]);
+
+  const handleAnswerOptionChange = (index, value) => {
+    const newAnswerOptions = [...answerOptions];
+    newAnswerOptions[index].answerText = value;
+    setAnswerOptions(newAnswerOptions);
+  };
+
+  const handleCorrectAnswerChange = (index) => {
+    const newAnswerOptions = answerOptions.map((option, i) => ({
+      ...option,
+      isCorrect: i === index,
+    }));
+    setAnswerOptions(newAnswerOptions);
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    onAddQuestion({ questionText, answerOptions });
+    setQuestionText('');
+    setAnswerOptions([
+      { answerText: '', isCorrect: false },
+      { answerText: '', isCorrect: false },
+      { answerText: '', isCorrect: false },
+      { answerText: '', isCorrect: false },
+    ]);
+  };
+
+  if (isQuizStarted) {
+    return null;
+  }
+
+  return (
+    <form className="add-question-form" onSubmit={handleSubmit}>
+      <h2>Add a New Question</h2>
+      <label>
+        Question:
+        <input
+          type="text"
+          value={questionText}
+          onChange={(e) => setQuestionText(e.target.value)}
+          required
+        />
+      </label>
+      {answerOptions.map((option, index) => (
+        <div key={index} className="answer-option">
+          <input
+            type="text"
+            value={option.answerText}
+            onChange={(e) => handleAnswerOptionChange(index, e.target.value)}
+            required
+          />
+          <input
+            type="radio"
+            name="correctAnswer"
+            checked={option.isCorrect}
+            onChange={() => handleCorrectAnswerChange(index)}
+          />
+          <label>Correct</label>
+        </div>
+      ))}
+      <button type="submit" className="add-question-button">Add Question</button>
+    </form>
+  );
+};
+
 export function QuizApp() {
+  const [questions, setQuestions] = useState(initialQuestions);
+  const [isQuizStarted, setIsQuizStarted] = useState(false);
+
+  const addQuestion = (newQuestion) => {
+    setQuestions([...questions, newQuestion]);
+  };
+
+  const handleStartQuiz = () => {
+    setIsQuizStarted(true);
+  };
+
+  const handleTryAgain = () => {
+    setIsQuizStarted(false);
+  };
+
   return (
     <div className="App">
-      <Quiz />
+      <h1>Quiz App</h1>
+      <AddQuestionForm onAddQuestion={addQuestion} isQuizStarted={isQuizStarted} />
+      <Quiz
+        questions={questions}
+        onStartQuiz={handleStartQuiz}
+        isQuizStarted={isQuizStarted}
+        onTryAgain={handleTryAgain}
+      />
     </div>
   );
 }
