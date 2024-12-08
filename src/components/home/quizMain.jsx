@@ -167,11 +167,11 @@ const AddQuestionForm = ({ onAddQuestion, isQuizStarted }) => {
     <form className="add-question-form" onSubmit={handleSubmit}>
       <h2>Add a New Question</h2>
       <label>
-        Question:
         <input
           type="text"
           value={questionText}
           onChange={(e) => setQuestionText(e.target.value)}
+          placeholder="Enter your question here"
           required
         />
       </label>
@@ -181,6 +181,7 @@ const AddQuestionForm = ({ onAddQuestion, isQuizStarted }) => {
             type="text"
             value={option.answerText}
             onChange={(e) => handleAnswerOptionChange(index, e.target.value)}
+            placeholder={`Answer ${index + 1}`}
             required
           />
           <input
