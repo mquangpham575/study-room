@@ -87,7 +87,7 @@ const Quiz = () => {
         </div>
       ) : (
         <>
-          <div className='question-section'>
+          <div className='question-sectiona'>
             <div className='question-count'>
               <span>Question {currentQuestion + 1}</span>/{questions.length}
             </div>
