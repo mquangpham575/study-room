@@ -272,11 +272,9 @@ export function QuizApp() {
 
   const handleDeleteQuestion = async (questionId) => {
     try {
-      // Delete from Firestore
       const questionDocRef = doc(db, 'questions', questionId);
       await deleteDoc(questionDocRef);
 
-      // Update local state
       setQuestions(questions.filter(q => q.id !== questionId));
     } catch (error) {
       console.error('Error deleting question: ', error);
