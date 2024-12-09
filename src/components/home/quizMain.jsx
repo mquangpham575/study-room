@@ -1,14 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import './quizMain.css';
 import { db } from '../dblibs/firebase-config';
-import { collection, addDoc, getDocs, query, where } from 'firebase/firestore';
+import { collection, addDoc, getDocs, query, where, deleteDoc, doc } from 'firebase/firestore';
 
 const Timer = ({ seconds, onTimeUp, isActive }) => {
   const [timeLeft, setTimeLeft] = useState(seconds);
 
   useEffect(() => {
     if (!isActive) return;
-
     if (timeLeft === 0) {
       onTimeUp();
       return;
@@ -30,9 +29,7 @@ const Quiz = ({ questions, onStartQuiz, isQuizStarted, onTryAgain }) => {
 
   const handleAnswerOptionClick = (isCorrect, index) => {
     setSelectedAnswer(index);
-    if (isCorrect) {
-      setScore(score + 1);
-    }
+    if (isCorrect) setScore(score + 1);
   };
 
   const handleNextQuestion = () => {
@@ -45,9 +42,7 @@ const Quiz = ({ questions, onStartQuiz, isQuizStarted, onTryAgain }) => {
     }
   };
 
-  const handleTimeUp = () => {
-    setShowScore(true);
-  };
+  const handleTimeUp = () => setShowScore(true);
 
   const handleTryAgain = () => {
     setCurrentQuestion(0);
@@ -58,52 +53,46 @@ const Quiz = ({ questions, onStartQuiz, isQuizStarted, onTryAgain }) => {
   };
 
   return (
-    <div className='quiz-container'>
+    <div className="quiz-container">
       {!isQuizStarted ? (
-        <button className='start-quiz-button' onClick={onStartQuiz}>Start Quiz</button>
+        <button className="start-quiz-button" onClick={onStartQuiz}>Start Quiz</button>
       ) : showScore ? (
-        <div className='score-section'>
+        <div className="score-section">
           You scored {score} out of {questions.length}
           <div>
-            <button className='try-again-button' onClick={handleTryAgain}>Try Again</button>
+            <button className="try-again-button" onClick={handleTryAgain}>Try Again</button>
           </div>
         </div>
       ) : questions.length === 0 ? (
-        <div className='no-questions'>
-          Please add question first!
+        <div className="no-questions">
+          Please add questions first!
           <div>
-            <button className='try-again-button' onClick={handleTryAgain}>Back</button>
+            <button className="try-again-button" onClick={handleTryAgain}>Back to questions</button>
           </div>
         </div>
       ) : (
         <>
-          <div className='question-section'>
-            <div className='question-count'>
+          <div className="question-section">
+            <div className="question-count">
               <span>Question {currentQuestion + 1}</span>/{questions.length}
             </div>
-            <div className='question-text'>{questions[currentQuestion].questionText}</div>
+            <div className="question-text">{questions[currentQuestion].questionText}</div>
           </div>
-          <div className='answer-section'>
+          <div className="answer-section">
             {questions[currentQuestion].answerOptions.map((answerOption, index) => (
               <button
                 key={index}
                 onClick={() => handleAnswerOptionClick(answerOption.isCorrect, index)}
-                className={
-                  selectedAnswer === index
-                    ? answerOption.isCorrect
-                      ? 'correct'
-                      : 'incorrect'
-                    : selectedAnswer !== null && answerOption.isCorrect
-                    ? 'correct'
-                    : ''
-                }
+                className={selectedAnswer === index
+                  ? answerOption.isCorrect ? 'correct' : 'incorrect'
+                  : selectedAnswer !== null && answerOption.isCorrect ? 'correct' : ''}
                 disabled={selectedAnswer !== null}
               >
                 {answerOption.answerText}
               </button>
             ))}
           </div>
-          <button className='next-button' onClick={handleNextQuestion}>Next</button>
+          <button className="next-button" onClick={handleNextQuestion}>Next</button>
           <Timer seconds={120} onTimeUp={handleTimeUp} isActive={isQuizStarted} />
         </>
       )}
@@ -137,11 +126,11 @@ const AddQuestionForm = ({ onAddQuestion, isQuizStarted, quizId }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     const newQuestion = { questionText, answerOptions, quizId };
-    onAddQuestion(newQuestion);
 
     try {
-      await addDoc(collection(db, 'questions'), newQuestion);
-      console.log('Question added to Firebase');
+      const docRef = await addDoc(collection(db, 'questions'), newQuestion);
+      const newQuestionWithId = { ...newQuestion, id: docRef.id };
+      onAddQuestion(newQuestionWithId);
     } catch (error) {
       console.error('Error adding question to Firebase: ', error);
     }
@@ -197,18 +186,9 @@ const AddQuestionForm = ({ onAddQuestion, isQuizStarted, quizId }) => {
 const CreateQuizForm = ({ onCreateQuiz }) => {
   const [quizName, setQuizName] = useState('');
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
-    const newQuiz = { quizName };
-
-    try {
-      const docRef = await addDoc(collection(db, 'quizzes'), newQuiz);
-      console.log('Quiz created with ID: ', docRef.id);
-      onCreateQuiz(docRef.id);
-    } catch (error) {
-      console.error('Error creating quiz: ', error);
-    }
-
+    onCreateQuiz(quizName);
     setQuizName('');
   };
 
@@ -228,14 +208,25 @@ const CreateQuizForm = ({ onCreateQuiz }) => {
   );
 };
 
-const QuizList = ({ quizzes, onSelectQuiz }) => {
+const QuizList = ({ quizzes, onSelectQuiz, onDeleteQuiz }) => {
+  const handleDeleteQuiz = async (quizId) => {
+    try {
+      const quizDocRef = doc(db, 'quizzes', quizId);
+      await deleteDoc(quizDocRef);
+      onDeleteQuiz(quizId);
+    } catch (error) {
+      console.error('Error deleting quiz: ', error);
+    }
+  };
+
   return (
     <div className="quiz-list">
       <h2>Available Quizzes</h2>
       {quizzes.map((quiz) => (
-        <button key={quiz.id} onClick={() => onSelectQuiz(quiz.id)} className="quiz-list-item">
-          {quiz.quizName}
-        </button>
+        <div key={quiz.id} className="quiz-list-item">
+          <div onClick={() => onSelectQuiz(quiz.id)} className="quiz-name">{quiz.quizName}</div>
+          <button onClick={() => handleDeleteQuiz(quiz.id)} className="delete-quiz-button">Delete</button>
+        </div>
       ))}
     </div>
   );
@@ -247,6 +238,7 @@ export function QuizApp() {
   const [selectedQuizId, setSelectedQuizId] = useState('');
   const [quizzes, setQuizzes] = useState([]);
   const [isQuizSelected, setIsQuizSelected] = useState(false);
+  const [showAllQuestions, setShowAllQuestions] = useState(false);
 
   useEffect(() => {
     const fetchQuizzes = async () => {
@@ -263,7 +255,10 @@ export function QuizApp() {
       if (selectedQuizId) {
         const q = query(collection(db, 'questions'), where('quizId', '==', selectedQuizId));
         const querySnapshot = await getDocs(q);
-        const fetchedQuestions = querySnapshot.docs.map(doc => doc.data());
+        const fetchedQuestions = querySnapshot.docs.map(doc => ({ 
+          id: doc.id, 
+          ...doc.data() 
+        }));
         setQuestions(fetchedQuestions);
       }
     };
@@ -275,28 +270,61 @@ export function QuizApp() {
     setQuestions([...questions, newQuestion]);
   };
 
+  const handleDeleteQuestion = async (questionId) => {
+    try {
+      // Delete from Firestore
+      const questionDocRef = doc(db, 'questions', questionId);
+      await deleteDoc(questionDocRef);
+
+      // Update local state
+      setQuestions(questions.filter(q => q.id !== questionId));
+    } catch (error) {
+      console.error('Error deleting question: ', error);
+    }
+  };
+
   const handleStartQuiz = () => {
     setIsQuizStarted(true);
+    setShowAllQuestions(false);
   };
 
   const handleTryAgain = () => {
     setIsQuizStarted(false);
   };
 
-  const handleCreateQuiz = (quizId) => {
-    setSelectedQuizId(quizId);
-    setIsQuizSelected(true);
+  const handleCreateQuiz = async (quizName) => {
+    const newQuiz = { quizName };
+
+    try {
+      const docRef = await addDoc(collection(db, 'quizzes'), newQuiz);
+      setQuizzes([...quizzes, { id: docRef.id, ...newQuiz }]);
+      setSelectedQuizId(docRef.id);
+      setIsQuizSelected(true);
+    } catch (error) {
+      console.error('Error creating quiz: ', error);
+    }
   };
 
   const handleSelectQuiz = (quizId) => {
     setSelectedQuizId(quizId);
     setIsQuizSelected(true);
     setIsQuizStarted(false);
+    setShowAllQuestions(false);
   };
 
   const handleBackToQuizzes = () => {
     setIsQuizSelected(false);
     setSelectedQuizId('');
+    setIsQuizStarted(false);
+    setShowAllQuestions(false);
+  };
+
+  const handleDeleteQuiz = (quizId) => {
+    setQuizzes(quizzes.filter(quiz => quiz.id !== quizId));
+  };
+
+  const handleShowAllQuestions = () => {
+    setShowAllQuestions(!showAllQuestions);
   };
 
   return (
@@ -304,14 +332,51 @@ export function QuizApp() {
       <h1>Quiz App</h1>
       {!isQuizSelected ? (
         <>
-          <CreateQuizForm onCreateQuiz={handleCreateQuiz} />
-          <QuizList quizzes={quizzes} onSelectQuiz={handleSelectQuiz} />
+          <CreateQuizForm onCreateQuiz={(quizName) => handleCreateQuiz(quizName)} />
+          <QuizList quizzes={quizzes} onSelectQuiz={handleSelectQuiz} onDeleteQuiz={handleDeleteQuiz} />
         </>
       ) : (
         <>
-          <button className="back-button" onClick={handleBackToQuizzes}>Back to Quizzes</button>
-          <AddQuestionForm onAddQuestion={addQuestion} isQuizStarted={isQuizStarted} quizId={selectedQuizId} />
-          <button className="start-quiz-button" onClick={handleStartQuiz}>Start Quiz</button>
+          <div className="action-buttons">
+            <button className="back-button" onClick={handleBackToQuizzes}>Back to Quizzes</button>
+            <button className="back-button" onClick={handleShowAllQuestions}>
+              {showAllQuestions ? 'Hide Questions' : 'Show All Questions'}
+            </button>
+          </div>
+          {showAllQuestions && (
+            <div className="question-list">
+              <h2>Questions in this Quiz:</h2>
+              {questions.length === 0 ? (
+                <p>No questions available</p>
+              ) : (
+                <ul>
+                  {questions.map((question, index) => (
+                    <li key={question.id} className="question-list-item">
+                      <div className="question-text-container">
+                        <div className="question-text">
+                          <strong>Question {index + 1}:</strong> {question.questionText}
+                        </div>
+                      </div>
+                      <button 
+                        className="delete-question-button" 
+                        onClick={() => handleDeleteQuestion(question.id)}
+                      >
+                        Delete
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
+          <AddQuestionForm 
+            onAddQuestion={addQuestion} 
+            isQuizStarted={isQuizStarted} 
+            quizId={selectedQuizId} 
+          />
+          {!isQuizStarted && (
+            <button className="start-quiz-button" onClick={handleStartQuiz}>Start Quiz</button>
+          )}
         </>
       )}
       {isQuizStarted && (

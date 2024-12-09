@@ -292,13 +292,118 @@
   text-decoration: none;
   display: inline-block;
   font-size: 16px;
-  margin: 10px 0;
+  margin: 10px 10px;
   cursor: pointer;
   border-radius: 5px;
   transition: transform 0.3s;
 }
 
 .back-button:hover {
+  background-color: #e5533d;
+  transform: translateY(-2px);
+}
+
+.quiz-list {
+  margin: 20px auto;
+  max-width: 500px;
+}
+
+.quiz-list h2 {
+  font-size: 24px;
+  margin-bottom: 20px;
+}
+
+.quiz-list-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 10px 0;
+  cursor: pointer; /* Make the entire item look clickable */
+  padding: 10px;
+  border-radius: 5px;
+  background-color: rgba(255, 255, 255, 0.8);
+  transition: background-color 0.3s;
+}
+
+.quiz-list-item:hover {
+  background-color: #e9e9e9;
+}
+
+.quiz-name {
+  flex-grow: 1;
+  font-size: 16px;
+  color: #333;
+  font-weight: bold;
+}
+
+.delete-quiz-button {
+  background-color: #ff6347;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  font-size: 16px;
+  cursor: pointer;
+  border-radius: 5px;
+  transition: transform 0.3s;
+}
+
+.delete-quiz-button:hover {
+  background-color: #e5533d;
+  transform: translateY(-2px);
+}
+
+.question-list {
+  margin: 20px auto;
+  max-width: 500px;
+}
+
+.question-list h2 {
+  font-size: 24px;
+  margin-bottom: 20px;
+}
+
+.question-list-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 10px 0;
+  cursor: pointer;
+  padding: 10px;
+  border-radius: 5px;
+  background-color: rgba(255, 255, 255, 0.8);
+  transition: background-color 0.3s;
+}
+
+.question-list-item:hover {
+  background-color: #e9e9e9;
+}
+
+.question-text-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-grow: 1;
+}
+
+.question-text {
+  font-size: 16px;
+  color: #333;
+  font-weight: bold;
+  margin-bottom: 2px;
+}
+
+.delete-question-button {
+  background-color: #ff6347;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  font-size: 16px;
+  cursor: pointer;
+  border-radius: 5px;
+  transition: transform 0.3s;
+}
+
+.delete-question-button:hover {
   background-color: #e5533d;
   transform: translateY(-2px);
 }
