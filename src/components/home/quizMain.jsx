@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './quizMain.css';
 import { db } from '../dblibs/firebase-config';
-import { collection, addDoc, getDocs } from 'firebase/firestore';
+import { collection, addDoc, getDocs, query, where } from 'firebase/firestore';
 
 const Timer = ({ seconds, onTimeUp, isActive }) => {
   const [timeLeft, setTimeLeft] = useState(seconds);
@@ -19,7 +19,7 @@ const Timer = ({ seconds, onTimeUp, isActive }) => {
     return () => clearInterval(timerId);
   }, [timeLeft, onTimeUp, isActive]);
 
-  return <div>Time left: {timeLeft}s</div>;
+  return <div className="timer">Time left: {timeLeft}s</div>;
 };
 
 const Quiz = ({ questions, onStartQuiz, isQuizStarted, onTryAgain }) => {
@@ -58,7 +58,7 @@ const Quiz = ({ questions, onStartQuiz, isQuizStarted, onTryAgain }) => {
   };
 
   return (
-    <div className='app'>
+    <div className='quiz-container'>
       {!isQuizStarted ? (
         <button className='start-quiz-button' onClick={onStartQuiz}>Start Quiz</button>
       ) : showScore ? (
@@ -111,7 +111,7 @@ const Quiz = ({ questions, onStartQuiz, isQuizStarted, onTryAgain }) => {
   );
 };
 
-const AddQuestionForm = ({ onAddQuestion, isQuizStarted }) => {
+const AddQuestionForm = ({ onAddQuestion, isQuizStarted, quizId }) => {
   const [questionText, setQuestionText] = useState('');
   const [answerOptions, setAnswerOptions] = useState([
     { answerText: '', isCorrect: false },
@@ -136,7 +136,7 @@ const AddQuestionForm = ({ onAddQuestion, isQuizStarted }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const newQuestion = { questionText, answerOptions };
+    const newQuestion = { questionText, answerOptions, quizId };
     onAddQuestion(newQuestion);
 
     try {
@@ -194,19 +194,82 @@ const AddQuestionForm = ({ onAddQuestion, isQuizStarted }) => {
   );
 };
 
+const CreateQuizForm = ({ onCreateQuiz }) => {
+  const [quizName, setQuizName] = useState('');
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const newQuiz = { quizName };
+
+    try {
+      const docRef = await addDoc(collection(db, 'quizzes'), newQuiz);
+      console.log('Quiz created with ID: ', docRef.id);
+      onCreateQuiz(docRef.id);
+    } catch (error) {
+      console.error('Error creating quiz: ', error);
+    }
+
+    setQuizName('');
+  };
+
+  return (
+    <form className="create-quiz-form" onSubmit={handleSubmit}>
+      <label>
+        <input
+          type="text"
+          value={quizName}
+          onChange={(e) => setQuizName(e.target.value)}
+          placeholder="Enter quiz name"
+          required
+        />
+      </label>
+      <button type="submit" className="create-quiz-button">Create Quiz</button>
+    </form>
+  );
+};
+
+const QuizList = ({ quizzes, onSelectQuiz }) => {
+  return (
+    <div className="quiz-list">
+      <h2>Available Quizzes</h2>
+      {quizzes.map((quiz) => (
+        <button key={quiz.id} onClick={() => onSelectQuiz(quiz.id)} className="quiz-list-item">
+          {quiz.quizName}
+        </button>
+      ))}
+    </div>
+  );
+};
+
 export function QuizApp() {
   const [questions, setQuestions] = useState([]);
   const [isQuizStarted, setIsQuizStarted] = useState(false);
+  const [selectedQuizId, setSelectedQuizId] = useState('');
+  const [quizzes, setQuizzes] = useState([]);
+  const [isQuizSelected, setIsQuizSelected] = useState(false);
+
+  useEffect(() => {
+    const fetchQuizzes = async () => {
+      const querySnapshot = await getDocs(collection(db, 'quizzes'));
+      const fetchedQuizzes = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      setQuizzes(fetchedQuizzes);
+    };
+
+    fetchQuizzes();
+  }, []);
 
   useEffect(() => {
     const fetchQuestions = async () => {
-      const querySnapshot = await getDocs(collection(db, 'questions'));
-      const fetchedQuestions = querySnapshot.docs.map(doc => doc.data());
-      setQuestions(fetchedQuestions);
+      if (selectedQuizId) {
+        const q = query(collection(db, 'questions'), where('quizId', '==', selectedQuizId));
+        const querySnapshot = await getDocs(q);
+        const fetchedQuestions = querySnapshot.docs.map(doc => doc.data());
+        setQuestions(fetchedQuestions);
+      }
     };
 
     fetchQuestions();
-  }, []);
+  }, [selectedQuizId]);
 
   const addQuestion = (newQuestion) => {
     setQuestions([...questions, newQuestion]);
@@ -220,16 +283,45 @@ export function QuizApp() {
     setIsQuizStarted(false);
   };
 
+  const handleCreateQuiz = (quizId) => {
+    setSelectedQuizId(quizId);
+    setIsQuizSelected(true);
+  };
+
+  const handleSelectQuiz = (quizId) => {
+    setSelectedQuizId(quizId);
+    setIsQuizSelected(true);
+    setIsQuizStarted(false);
+  };
+
+  const handleBackToQuizzes = () => {
+    setIsQuizSelected(false);
+    setSelectedQuizId('');
+  };
+
   return (
     <div className="App">
       <h1>Quiz App</h1>
-      <AddQuestionForm onAddQuestion={addQuestion} isQuizStarted={isQuizStarted} />
-      <Quiz
-        questions={questions}
-        onStartQuiz={handleStartQuiz}
-        isQuizStarted={isQuizStarted}
-        onTryAgain={handleTryAgain}
-      />
+      {!isQuizSelected ? (
+        <>
+          <CreateQuizForm onCreateQuiz={handleCreateQuiz} />
+          <QuizList quizzes={quizzes} onSelectQuiz={handleSelectQuiz} />
+        </>
+      ) : (
+        <>
+          <button className="back-button" onClick={handleBackToQuizzes}>Back to Quizzes</button>
+          <AddQuestionForm onAddQuestion={addQuestion} isQuizStarted={isQuizStarted} quizId={selectedQuizId} />
+          <button className="start-quiz-button" onClick={handleStartQuiz}>Start Quiz</button>
+        </>
+      )}
+      {isQuizStarted && (
+        <Quiz
+          questions={questions}
+          onStartQuiz={handleStartQuiz}
+          isQuizStarted={isQuizStarted}
+          onTryAgain={handleTryAgain}
+        />
+      )}
     </div>
   );
 }
