@@ -10,8 +10,8 @@ const Popup = ({ show, onClose }) => {
   }
 
   return (
-    <div className="popup">
-      <div className="popup-content">
+    <div className="popup-create-room">
+      <div className="popup-create-room-content">
         <button className="close-button" onClick={onClose}>×</button>
         
         <input

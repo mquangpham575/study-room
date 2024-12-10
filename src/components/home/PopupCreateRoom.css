@@ -1,4 +1,4 @@
-.popup {
+.popup-create-room {
   position: fixed;
   top: 50%;
   left: 50%;
@@ -22,7 +22,7 @@
   }
 }
 
-.popup-content {
+.popup-create-room-content {
   position: relative;
   display: flex;
   flex-direction: column;

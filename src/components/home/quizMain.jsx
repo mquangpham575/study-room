@@ -219,6 +219,10 @@ const QuizList = ({ quizzes, onSelectQuiz, onDeleteQuiz }) => {
     }
   };
 
+  if (quizzes.length === 0) {
+    return null; // Don't render anything if there are no quizzes
+  }
+
   return (
     <div className="quiz-list">
       <h2>Available Quizzes</h2>

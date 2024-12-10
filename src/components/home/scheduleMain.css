@@ -52,15 +52,15 @@ header {
 .add-event-button {
   background-color: #4CAF50;
   color: white;
-  padding: 10px 20px;
-  border: none;
-  border-radius: 5px;
+  border-radius: 35px;
   cursor: pointer;
-  margin-bottom: 20px;
+  margin-bottom: -5px;
+  transition: all 0.3s ease-in-out;
 }
 
 .add-event-button:hover {
-  background-color: #45a049;
+  transform: scale(1.2);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
 }
 
 .popup-e {
@@ -74,7 +74,18 @@ header {
   box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
   z-index: 1000;
   width: 450px;
-  animation: popUp 0.5s ease-in-out;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -60%);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%);
+  }
 }
 
 .popup-e form {
@@ -139,21 +150,6 @@ header {
   justify-content: center;
   align-items: center;
   color: #ccc;
-}
-
-@keyframes popUp {
-  from {
-    transform: scale(0.8);
-    opacity: 0;
-  }
-  to {
-    transform: scale(1);
-    opacity: 1;
-  }
-}
-
-.popup-e {
-  transform: translate(-50%, -50%) !important;
 }
 
 .delete-button {

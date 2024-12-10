@@ -46,7 +46,8 @@ export const Profiles = () => {
                     <p> Schedules </p>
                 </button>
 
-                <button className = 'buttonTab'>
+                <button className = 'buttonTab'
+                    onClick={() => redirectToPage("/task")}>
                     <img src = {"./png/clipboard.png"} alt=""/>
                     <p> Tasks </p>
                 </button>

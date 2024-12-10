@@ -1,0 +1,218 @@
+.task-main {
+    text-align: center;
+    font-family: 'Arial', sans-serif;
+    padding: 20px;
+    min-height: 100vh;
+}
+
+.add-new-task-button {
+    background: linear-gradient(to right, #ff758c, #ff7eb3);
+    border: none;
+    color: white;
+    padding: 10px 25px;
+    text-align: center;
+    font-size: 16px;
+    margin: 4px 2px;
+    cursor: pointer;
+    border-radius: 35px;
+    transition: all 0.3s ease-in-out;
+}
+
+.add-new-task-button:hover {
+    background: linear-gradient(to right, #ff7eb3, #ff758c);
+    transform: scale(1.1);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.task-list {
+    margin: 20px auto;
+    max-width: 600px;
+    color: black;
+}
+
+.task-item {
+    background-color: rgba(255, 255, 255, 0.9);
+    margin: 10px 0;
+    padding: 15px;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    position: relative;
+    border: 1px solid #d1e7d1;
+}
+
+.task-item h3 {
+    font-size: 22px;
+    color: black;
+}
+
+.progress-bar {
+    background: #e9ecef;
+    height: 12px;
+    border-radius: 6px;
+    overflow: hidden;
+    margin: 10px 0;
+}
+
+.progress {
+    height: 100%;
+    background: #28a745;
+    transition: width 0.4s ease;
+}
+
+.popup-task {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    animation: fadeIn 0.3s ease-out;
+}
+
+.popup-task-content {
+    background: #fff;
+    padding: 30px;
+    border-radius: 10px;
+    width: 400px;
+    max-width: 90%;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+    animation: scaleUp 0.3s ease-out;
+    position: relative;
+}
+
+.popup-task-content h2 {
+    font-size: 1.5rem;
+    margin-bottom: 20px;
+    text-align: center;
+    color: #333;
+}
+
+.popup-task-content input[type="text"] {
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 20px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: border 0.3s ease;
+}
+
+.popup-task-content input[type="text"]:focus {
+    border: 1px solid #007bff;
+    outline: none;
+}
+
+.popup-task-content .subtasks button {
+    width: 100%;
+    padding: 12px;
+    background-color: #28a745;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: background-color 0.3s ease;
+}
+
+.popup-task-content .subtasks button:hover {
+    background-color: #218838;
+}
+
+.popup-task-content .action-buttons {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+}
+
+.popup-task-content .action-buttons button {
+    padding: 12px;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    width: 48%;
+}
+
+.popup-task-content .action-buttons .cancel-btn {
+    background-color: #ccc;
+    color: #333;
+}
+
+.popup-task-content .action-buttons .cancel-btn:hover {
+    background-color: #aaa;
+}
+
+.popup-task-content .action-buttons .save-btn {
+    background-color: #007bff;
+    color: #fff;
+}
+
+.popup-task-content .action-buttons .save-btn:hover {
+    background-color: #0056b3;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes scaleUp {
+    from {
+        transform: scale(0.8);
+    }
+    to {
+        transform: scale(1);
+    }
+}
+
+.delete-task {
+    position: absolute;
+    top: 0;
+    right: 8px;
+    background: transparent;
+    border: none;
+    font-size: 18px;
+    cursor: pointer;
+    color: #ff4757;
+}
+
+.delete-task:hover {
+    color: #e63946;
+}
+
+.subtask-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.subtask-item input[type="checkbox"] {
+    display: inline-block;
+}
+
+.subtask-name {
+    flex-grow: 1;
+    text-align: left;
+}
+
+.delete-subtask {
+    background: none;
+    border: none;
+    color: #ff4757;
+    cursor: pointer;
+    font-size: 16px;
+    padding: 0;
+}
+
+.delete-subtask:hover {
+    color: #e63946;
+}

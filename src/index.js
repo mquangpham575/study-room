@@ -8,6 +8,7 @@ import { Home } from './pages/home.jsx';
 import { Chat } from './pages/chat.jsx';
 import { Schedule } from './pages/schedule.jsx';
 import { Quiz } from './pages/quiz.jsx';
+import { Task } from './pages/task.jsx';
 
 import {
   createBrowserRouter,
@@ -44,6 +45,11 @@ const router = createBrowserRouter([
   {
     path: "/quiz",
     element: <PrivRoutes targetComponent = {<Quiz/>}/>,
+  },
+
+  {
+    path: "/task",
+    element: <PrivRoutes targetComponent = {<Task/>}/>,
   }
 ]);
 

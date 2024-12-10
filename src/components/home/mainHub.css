@@ -111,13 +111,13 @@
         }
 
         .buttonDisplay {
+            display: flex;
             width: 100%;
-            padding: 20px 20px;
-            cursor: pointer;
             font-size: 16px;
-          }
+            gap: 10px;
+        }
           
-          .create-room-button {
+        .create-room-button {
             background: linear-gradient(to right, #ff758c, #ff7eb3);
             border: none;
             color: white;
@@ -129,9 +129,10 @@
             margin: 4px 2px;
             cursor: pointer;
             border-radius: 35px;
+            transition: all 0.3s ease-in-out;
           }
           
-          .join-room-button {
+        .join-room-button {
             background: linear-gradient(to right, #92c1ff, #7eb6ff);
             border: none;
             color: white;
@@ -143,14 +144,17 @@
             margin: 4px 2px;
             cursor: pointer;
             border-radius: 35px;
-          }          
+            transition: all 0.3s ease-in-out;
+        }          
           
-          .create-room-button:hover {
-            opacity: 0.8;
-          }
+        .create-room-button:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
 
-          .join-room-button:hover {
-            opacity: 0.8;
-          }
+        .join-room-button:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
     }
 }
