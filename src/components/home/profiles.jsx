@@ -60,7 +60,8 @@ export const Profiles = () => {
 
                 <div className = 'sep'/>
 
-                <button className = 'buttonTab'>
+                <button className = 'buttonTab'
+                    onClick={() => redirectToPage("/friend")} >
                     <img src = {"./png/friends.png"} alt=""/>
                     <p> Friends </p>
                 </button>
