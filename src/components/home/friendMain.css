@@ -14,6 +14,7 @@
         display: flex;
         align-items: center;
         gap: 10px;
+
         position: relative;
         width: 500px;
         /* Adjust as per your need */
@@ -46,6 +47,7 @@
     }
 
     .option-button {
+
         display: flex;
         margin: 1%;
         overflow-x: auto;
@@ -59,6 +61,7 @@
             /* Remove default border */
             border-radius: 15px;
             /* Set custom radius */
+
             color: white
         }
     }
@@ -97,6 +100,7 @@
     .scroll-container::-webkit-scrollbar-thumb:hover {
         background: #555;
         /* Darken thumb color on hover */
+
     }
 
     .user-item {

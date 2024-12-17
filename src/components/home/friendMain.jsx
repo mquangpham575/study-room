@@ -17,6 +17,7 @@ export const FriendMain = () => {
     const [friendList, setFriendList] = useState([]);
     const [activeSection, setActiveSection] = useState(buttonNames[0]); // Track which button is clicked
     const [currentUser, setCurrentUser] = useState(null);
+
     const [searchTerm, setSearchTerm] = useState(""); // State for search input
 
     const filterSearch = (items) => {
@@ -151,6 +152,7 @@ export const FriendMain = () => {
             console.error("Error establishing mutual friendship: ", error);
         }
     };
+
     const unFriend = async (userB) => {
         if (!userB || !userB.id) {
             console.error("Invalid userB: Cannot unfriend.");
@@ -169,6 +171,7 @@ export const FriendMain = () => {
         }
     };
 
+
     // Button click handler to set the active section
     const handleButtonClick = (sectionName) => {
         setActiveSection(sectionName);
@@ -178,7 +181,9 @@ export const FriendMain = () => {
         <div className='friend'>
             <div className='search-bar'>
                 <h3>Friends</h3>
+
                 <input onChange={(e) => setSearchTerm(e.target.value)} type='text' placeholder='Search friends' />
+
             </div>
 
             <div className="option-button">
@@ -198,12 +203,14 @@ export const FriendMain = () => {
 
                 {activeSection === 'Friends' && (
                     <div className="scroll-container">
+
                         <ul>
                             {filterSearch(friendList).map(user => (
                                 <li key={user.id} className='user-item'>
                                     <img src={user.avatar} alt={user.username} className="user-avatar" />
                                     <span>{user.username}</span>
                                     <button onClick={() => unFriend(user)}>Unfriend</button>
+
                                 </li>
                             ))}
                         </ul>
@@ -212,8 +219,10 @@ export const FriendMain = () => {
 
                 {activeSection === 'Friends Request' && (
                     <div className="scroll-container">
+
                         <ul>
                             {filterSearch(requestFriendList).map(user => (
+
                                 <li key={user.id} className='user-item'>
                                     <img src={user.avatar} alt={user.username} className="user-avatar" />
                                     <span>{user.username}</span>
@@ -228,6 +237,7 @@ export const FriendMain = () => {
                     <div className="scroll-container">
                         <ul>
                             {filterSearch(usersList).map(user => (
+
                                 <li key={user.id} className='user-item'>
                                     <img src={user.avatar} alt={user.username} className="user-avatar" />
                                     <span>{user.username}</span>
