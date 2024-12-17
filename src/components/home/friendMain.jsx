@@ -18,6 +18,15 @@ export const FriendMain = () => {
     const [activeSection, setActiveSection] = useState(buttonNames[0]); // Track which button is clicked
     const [currentUser, setCurrentUser] = useState(null);
 
+    const [searchTerm, setSearchTerm] = useState(""); // State for search input
+
+    const filterSearch = (items) => {
+        return items.filter((item) =>
+            item.username.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+    }
+
+
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, (user) => {
             if (user) {
@@ -144,6 +153,25 @@ export const FriendMain = () => {
         }
     };
 
+    const unFriend = async (userB) => {
+        if (!userB || !userB.id) {
+            console.error("Invalid userB: Cannot unfriend.");
+            return;
+        }
+        try {
+            const userARef = doc(db, "users", currentUser.uid, 'friend', userB.id); 
+            const userBRef = doc(db, "users", userB.id, 'friend', currentUser.uid);
+            await Promise.all([
+                deleteDoc(userARef),
+                deleteDoc(userBRef)
+            ]);
+            setFriendList(prevList => prevList.filter(user => user.id !== userB.id));
+        } catch(error) {
+            console.error("Error while unfriending user:", error);
+        }
+    };
+
+
     // Button click handler to set the active section
     const handleButtonClick = (sectionName) => {
         setActiveSection(sectionName);
@@ -153,10 +181,9 @@ export const FriendMain = () => {
         <div className='friend'>
             <div className='search-bar'>
                 <h3>Friends</h3>
-                <input type='text' placeholder='Search friends' />
-                <button>
-                    <img src={"./png/search.png"} alt="" />
-                </button>
+
+                <input onChange={(e) => setSearchTerm(e.target.value)} type='text' placeholder='Search friends' />
+
             </div>
 
             <div className="option-button">
@@ -176,12 +203,14 @@ export const FriendMain = () => {
 
                 {activeSection === 'Friends' && (
                     <div className="scroll-container">
-                        <p>Displaying Friend list</p>
+
                         <ul>
-                            {friendList.map(user => (
+                            {filterSearch(friendList).map(user => (
                                 <li key={user.id} className='user-item'>
                                     <img src={user.avatar} alt={user.username} className="user-avatar" />
                                     <span>{user.username}</span>
+                                    <button onClick={() => unFriend(user)}>Unfriend</button>
+
                                 </li>
                             ))}
                         </ul>
@@ -190,9 +219,10 @@ export const FriendMain = () => {
 
                 {activeSection === 'Friends Request' && (
                     <div className="scroll-container">
-                        <p>Displaying Friend Requests</p>
+
                         <ul>
-                            {requestFriendList.map(user => (
+                            {filterSearch(requestFriendList).map(user => (
+
                                 <li key={user.id} className='user-item'>
                                     <img src={user.avatar} alt={user.username} className="user-avatar" />
                                     <span>{user.username}</span>
@@ -206,7 +236,8 @@ export const FriendMain = () => {
                 {activeSection === 'Find Friends' && (
                     <div className="scroll-container">
                         <ul>
-                            {usersList.map(user => (
+                            {filterSearch(usersList).map(user => (
+
                                 <li key={user.id} className='user-item'>
                                     <img src={user.avatar} alt={user.username} className="user-avatar" />
                                     <span>{user.username}</span>
