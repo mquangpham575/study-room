@@ -10,7 +10,6 @@ const toggle = (open, setOpen) => {
     setOpen(!open);
 }
 
-
 export const MainHub = (props) => {
     const {currentUser} = useUserStore();
     const [open, setOpen] = useState(false);

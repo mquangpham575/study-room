@@ -6,7 +6,10 @@ import {Login} from './pages/login.jsx';
 import {PrivRoutes} from './pages/privRoutes.jsx';
 import { Home } from './pages/home.jsx';
 import { Chat } from './pages/chat.jsx';
-import { Friends } from './pages/friends.jsx';
+import { Schedule } from './pages/schedule.jsx';
+import { Quiz } from './pages/quiz.jsx';
+import { Task } from './pages/task.jsx';
+import { Friend } from './pages/friend.jsx';
 
 import {
   createBrowserRouter,
@@ -35,11 +38,6 @@ const router = createBrowserRouter([
   },
 
   {
-    path: "/friends",
-    element: <PrivRoutes targetComponent = {<Friends/>}/>,
-  },
-
-  {
     path: "/chat",
     element: <PrivRoutes targetComponent = {<Chat/>}/>,
   },
@@ -57,6 +55,26 @@ const router = createBrowserRouter([
   {
     path: "/profile/:id",
     element: <PrivRoutes targetComponent = {<Profile/>}/>,
+  }
+
+  {
+    path: "/schedule",
+    element: <PrivRoutes targetComponent = {<Schedule/>}/>,
+  },
+
+  {
+    path: "/quiz",
+    element: <PrivRoutes targetComponent = {<Quiz/>}/>,
+  },
+
+  {
+    path: "/task",
+    element: <PrivRoutes targetComponent = {<Task/>}/>,
+  },
+
+  {
+    path: "/friend",
+    element: <PrivRoutes targetComponent = {<Friend/>}/>,
   }
 ]);
 

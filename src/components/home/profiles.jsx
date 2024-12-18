@@ -45,26 +45,29 @@ export const Profiles = () => {
 
                 <div className = 'sep'/>
 
-                <button className = 'buttonTab'>
-                    <img src = {"../png/schedule.png"} alt=""/>
+                <button className = 'buttonTab'
+                    onClick={() => redirectToPage("/schedule")}>
+                    <img src = {"./png/schedule.png"} alt=""/>
                     <p> Schedules </p>
                 </button>
 
-                <button className = 'buttonTab'>
-                    <img src = {"../png/clipboard.png"} alt=""/>
+                <button className = 'buttonTab'
+                    onClick={() => redirectToPage("/task")}>
+                    <img src = {"./png/clipboard.png"} alt=""/>
                     <p> Tasks </p>
                 </button>
 
-                <button className = 'buttonTab'>
-                    <img src = {"../png/choose.png"} alt=""/>
+                <button className = 'buttonTab'
+                    onClick={() => redirectToPage("/quiz")}>
+                    <img src = {"./png/choose.png"} alt=""/>
                     <p> Quizs </p>
                 </button>
 
                 <div className = 'sep'/>
 
                 <button className = 'buttonTab'
-                    onClick={() => redirectToPage("/friends")}>
-                    <img src = {"../png/friends.png"} alt=""/>
+                    onClick={() => redirectToPage("/friend")} >
+                    <img src = {"./png/friends.png"} alt=""/>
                     <p> Friends </p>
                 </button>
 

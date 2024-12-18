@@ -21,6 +21,7 @@ export const Auth = (props) => {
         file:null,
         url:""
     });
+    const [loading, setLoading] = useState(true);
 
     const handleAvatar = e => {
         if (e.target.files[0])
@@ -107,7 +108,6 @@ export const Auth = (props) => {
                     email,
                     id : res.user.uid,
                     blocked:[],
-                    friends: []
                 }
             )
 
@@ -157,27 +157,26 @@ export const Auth = (props) => {
 
 export const Login = () => {
     const {currentUser, isLoading, fetchUserInfo, resetUserInfo} = useUserStore();
-
-    useEffect( ()=>{
-        console.warn('I RUN AGAIN!');
-
-        const unSub = onAuthStateChanged(auth, (user)=> {
-            if (!user)
-            {
-                resetUserInfo();
-
-                unSub();    
-                return;
-            }
-            
-            fetchUserInfo(user.uid);
-            unSub();
-        });
-
-        return () => unSub();
-    }, [fetchUserInfo, resetUserInfo]);
     
-    if (isLoading) return <div>TEST LOADING</div>;
+    useEffect( ()=>{
+        const unSub = onAuthStateChanged(auth, (user)=> {
+          console.log(auth.currentUser);
+          if (!user)
+          {
+            resetUserInfo();
+            return;
+          }
+          fetchUserInfo(user.uid);
+        });
+    
+        return () => {
+          unSub();
+        }
+      },[fetchUserInfo]);
+    
+      console.log(currentUser);
+    
+      if (isLoading) return <div>TEST LOADING</div>;
   
     return (
         (!currentUser? <div className = "container">
