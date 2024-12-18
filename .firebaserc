@@ -1,0 +1,7 @@
+{
+  "projects": {
+    "default": "testyappayappadoo",
+    "dev": "testyappayappadoo",
+    "prod": "testyappayappadoo"
+  }
+}
