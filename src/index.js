@@ -48,22 +48,27 @@ const router = createBrowserRouter([
   },
 
   {
-    path: "/room",
+    path: "/room/:id",
     element: <PrivRoutes targetComponent = {<ChatRoom/>}/>,
   },
 
   {
     path: "/profile/:id",
     element: <PrivRoutes targetComponent = {<Profile/>}/>,
-  }
+  },
 
   {
-    path: "/schedule",
+    path: "/schedule/:id",
     element: <PrivRoutes targetComponent = {<Schedule/>}/>,
   },
 
   {
     path: "/quiz",
+    element: <PrivRoutes targetComponent = {<Quiz/>}/>,
+  },
+
+  {
+    path: "/quiz/:id",
     element: <PrivRoutes targetComponent = {<Quiz/>}/>,
   },
 

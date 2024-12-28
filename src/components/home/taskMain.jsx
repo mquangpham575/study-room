@@ -1,34 +1,38 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { collection, addDoc, getDocs, deleteDoc, doc, updateDoc } from 'firebase/firestore';
+import React, { useState, useEffect } from 'react';
+import { collection, addDoc, getDocs, deleteDoc, doc, updateDoc, getDoc, setDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
 import { db } from '../dblibs/firebase-config';
 import './taskMain.css';
+import { useUserStore } from '../dblibs/userStore';
+import { toast } from 'react-toastify';
 
 export const TaskMain = () => {
+    const {currentUser, fetchMoreInfo} = useUserStore();
     const [tasks, setTasks] = useState([]);
     const [showPopup, setShowPopup] = useState(false);
     const [taskName, setTaskName] = useState('');
     const [subtasks, setSubtasks] = useState([]);
     const tasksCollection = collection(db, 'tasks');
+    const docRef = doc(db, 'tasks', currentUser.id);
 
-    const fetchTasks = useCallback(async () => {
+    const handleDeleteTask = async (task, index) => {
         try {
-            const data = await getDocs(tasksCollection);
-            setTasks(data.docs.map((doc) => ({ ...doc.data(), id: doc.id })));
-        } catch (error) {
-            console.error('Error fetching tasks:', error);
-        }
-    }, [tasksCollection]);
+            const docSnapshot = await getDoc(docRef);
 
-    const handleDeleteTask = async (taskId) => {
-        try {
-            await deleteDoc(doc(db, 'tasks', taskId));
-            fetchTasks();
+            if (docSnapshot.exists()) {
+                await updateDoc(docRef, {
+                    tasks: arrayRemove(task)
+                })
+            }
+
+            fetchMoreInfo(currentUser.id, 'tasks');
+            setTasks(tasks.filter((i, ind)=>ind !== index));
+
+            toast.success('Successfully removed task!');
         } catch (error) {
             console.error('Error deleting task:', error);
         }
     };
     
-
     const handleAddTask = async () => {
         if (taskName.trim() === '') {
             alert('Task name cannot be empty');
@@ -48,10 +52,25 @@ export const TaskMain = () => {
             subtasks: subtasks.map((subtask) => ({ ...subtask, completed: false })),
         };
         try {
-            await addDoc(tasksCollection, newTask);
+            const docSnapshot = await getDoc(docRef);
+
+            if (docSnapshot.exists()) {
+                await updateDoc(docRef, {
+                    tasks: arrayUnion(newTask)
+                })
+            } else {
+                await setDoc(docRef, {
+                    tasks: [newTask]
+                })
+            };
+
             resetPopup();
+            
             setShowPopup(false);
-            fetchTasks();
+            setTasks([...tasks, newTask]);
+            fetchMoreInfo(currentUser.id, 'tasks');
+
+            toast.success('Successfully added task!');
         } catch (error) {
             console.error('Error adding task:', error);
         }
@@ -63,50 +82,59 @@ export const TaskMain = () => {
             return;
         }
 
-        setSubtasks([...subtasks, { id: Date.now(), name: '', completed: false }]);
+        setSubtasks([...subtasks, { name: '', completed: false }]);
     };
 
     const handleSubtaskNameChange = (id, value) => {
         setSubtasks(
-            subtasks.map((subtask) =>
-                subtask.id === id ? { ...subtask, name: value } : subtask
+            subtasks.map((subtask, i) =>
+                i === id ? { ...subtask, name: value } : subtask
             )
         );
     };
 
     const handleDeleteSubtask = async (taskId, subtaskId) => {
-        const task = tasks.find((t) => t.id === taskId);
+        const task = tasks[taskId];
         if (!task) return;
 
-        const updatedSubtasks = task.subtasks.filter((subtask) => subtask.id !== subtaskId);
-
+        const updatedTasks = tasks.concat();
+        const updatedSubtasks = updatedTasks[taskId].subtasks.filter((_, i) => i !== subtaskId);
+        updatedTasks[taskId].subtasks = updatedSubtasks;
+        
         try {
             if (updatedSubtasks.length === 0) {
-                await deleteDoc(doc(db, 'tasks', taskId));
+                handleDeleteTask(tasks[taskId], taskId);
             } else {
-                await updateDoc(doc(db, 'tasks', taskId), { subtasks: updatedSubtasks });
+                setTasks(updatedTasks);
+
+                await updateDoc(doc(db, 'tasks', currentUser.id), {
+                    tasks: updatedTasks
+                });
+
+                fetchMoreInfo(currentUser.id, 'tasks');
             }
-            fetchTasks();
         } catch (error) {
             console.error('Error deleting subtask:', error);
         }
     };
 
     const toggleSubtaskCompletion = async (taskId, subtaskId) => {
-        const task = tasks.find((t) => t.id === taskId);
+        const task = tasks[taskId];
         if (!task) return;
 
-        const updatedSubtasks = task.subtasks.map((subtask) =>
-            subtask.id === subtaskId
-                ? { ...subtask, completed: !subtask.completed }
-                : subtask
-        );
-
+        const updatedTasks = tasks.concat();
+        const updatedSubtasks = updatedTasks[taskId].subtasks[subtaskId];
+        updatedSubtasks.completed = !updatedSubtasks.completed;
         try {
-            await updateDoc(doc(db, 'tasks', taskId), { subtasks: updatedSubtasks });
-            fetchTasks();
+            setTasks(updatedTasks);
+
+            await updateDoc(doc(db, 'tasks', currentUser.id), {
+                tasks: updatedTasks
+            });
+
+            fetchMoreInfo(currentUser.id, 'tasks');
         } catch (error) {
-            console.error('Error toggling subtask completion:', error);
+            console.error('Error deleting subtask:', error);
         }
     };
 
@@ -116,8 +144,28 @@ export const TaskMain = () => {
     };
 
     useEffect(() => {
-        fetchTasks();
-    }, [fetchTasks]);
+        if (!currentUser.tasks)
+            fetchMoreInfo(currentUser.id, 'tasks');
+        
+    }, [currentUser, fetchMoreInfo]);
+
+    useEffect(()=>{
+        if (currentUser.tasks)
+        {
+            try {
+                const fetchedData = [];
+                const dat = currentUser.tasks;
+                
+                for (let a in dat.tasks) {
+                    fetchedData.push(dat.tasks[a]);
+                }
+
+                setTasks(fetchedData);
+            } catch (error) {
+                console.error('Error fetching tasks:', error);
+            }
+        }
+    }, [currentUser])
 
     return (
         <div className="task-main">
@@ -127,7 +175,7 @@ export const TaskMain = () => {
             </button>
 
             <div className="task-list">
-                {tasks.map((task) => {
+                {tasks.map((task, index) => {
                     const completedSubtasks = task.subtasks.filter(
                         (subtask) => subtask.completed
                     ).length;
@@ -140,8 +188,7 @@ export const TaskMain = () => {
                         <div key={task.id} className="task-item">
                             <button
                                 className="delete-task"
-                                onClick={() => handleDeleteTask(task.id)}
-                            >
+                                onClick={() => handleDeleteTask(task, index)}>
                                 ✕
                             </button>
                             <h3>{task.name}</h3>
@@ -150,18 +197,17 @@ export const TaskMain = () => {
                             </div>
                             <p>{progress}% completed</p>
                             <div>
-                                {task.subtasks.map((subtask) => (
+                                {task.subtasks.map((subtask, subindex) => (
                                     <li key={subtask.id} className="subtask-item">
                                         <input
                                             type="checkbox"
                                             checked={subtask.completed}
-                                            onChange={() => toggleSubtaskCompletion(task.id, subtask.id)}
+                                            onChange={() => toggleSubtaskCompletion(index, subindex)}
                                         />
                                         <span className="subtask-name">{subtask.name}</span>
                                         <button
                                             className="delete-subtask"
-                                            onClick={() => handleDeleteSubtask(task.id, subtask.id)}
-                                        >
+                                            onClick={() => handleDeleteSubtask(index, subindex)}>
                                             🗑️
                                         </button>
                                     </li>
@@ -184,14 +230,14 @@ export const TaskMain = () => {
                         />
                         <div className="subtasks">
                             <h2>Subtasks</h2>
-                            {subtasks.map((subtask) => (
+                            {subtasks.map((subtask, subid) => (
                                 <div key={subtask.id} className="subtask-item">
                                     <input
                                         type="text"
                                         placeholder="Subtask Name"
                                         value={subtask.name}
                                         onChange={(e) =>
-                                            handleSubtaskNameChange(subtask.id, e.target.value)
+                                            handleSubtaskNameChange(subid, e.target.value)
                                         }
                                     />
                                 </div>
@@ -206,8 +252,7 @@ export const TaskMain = () => {
                                 onClick={() => {
                                     resetPopup();
                                     setShowPopup(false);
-                                }}
-                            >
+                                }}>
                                 Cancel
                             </button>
                         </div>

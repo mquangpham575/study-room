@@ -14,65 +14,26 @@ export const ProfileMain = () => {
 
     const [editName, setEditName] = useState(false);
     const [editAM, setEditAM] = useState(false);
-    const [dropdown, setDropdown] = useState(null);
 
     let id = useParams().id;
-        
-    console.log('beginning',previewUser, isLoading, curUserProf);
 
     useEffect(()=>{
-        resetUserInfoForLoading();
-        
-        fetchProfile(id);
-
-        console.log(previewUser, isLoading, curUserProf);
-
-        fetchPrUserInfo(id);
-
-        console.log('I ran');
-        console.log(previewUser, isLoading);
-        },[id]);
+        if (id === previewUser?.id) {
+            fetchProfile(id);
+        }
+        else {
+            resetUserInfoForLoading();
+            fetchProfile(id);
+            fetchPrUserInfo(id);
+        }
+    },[id]);
     
-    if (isLoading) return <div style = {{
-            'font-size': '45px',
-            'display': 'flex',
-            'align-items': 'center',
-            'height': '100%',
-            'font-weight': 'bold',
-            'text-shadow': '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000'
-        }}>LOADING...</div>;
-            
-    if (previewUser == null) return <div style = {{
-        'font-size': '45px',
-        'display': 'flex',
-        'align-items': 'center',
-        'height': '100%',
-        'font-weight': 'bold',
-        'text-shadow': '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000'
-    }}>NO SUCH USER EXISTS.</div>;
-
-    const renderOverlay = (e) => {
-        const chatArena = e.currentTarget.parentElement.parentElement;
-
-        setDropdown(
-            <div style = {{
-                position: 'absolute',
-                top: e.currentTarget.offsetTop + 35 - chatArena.scrollTop,
-                left: e.currentTarget.offsetLeft - 75,
-                'z-index': 2,
-                'background-color': 'green',
-            }}>        
-                <div className={"dropdown-content"}>
-                    <button> Unfriend </button>
-                    <button> Block </button>
-                </div>
-            </div>
-        );
-    }
-
+    if (isLoading) return <div className='globalLoad'>LOADING...</div>;
+    if (previewUser == null) return <div className='globalLoad'> NO SUCH USER EXISTS. </div>;
+    
     const handleEditName = async (e) => {
         e.preventDefault();
-        if (currentUser.id === previewUser.id) return;
+        if (currentUser.id !== previewUser.id) return;
         
         const formData = new FormData(e.target);
         const newname = formData.get("newname");
@@ -88,8 +49,9 @@ export const ProfileMain = () => {
               });
 
             toast.success("Name updated!");
-
+            
             fetchUserInfo(currentUser.id);
+            fetchPrUserInfo(id);
         } catch {
             toast.error("Something went wrong! Please try again");
         }
@@ -97,7 +59,7 @@ export const ProfileMain = () => {
 
     const handleEditAM = async (e) => {
         e.preventDefault();
-        if (currentUser.id === previewUser.id) return;
+        if (currentUser.id !== previewUser.id) return;
         
         const formData = new FormData(e.target);
         const aboutme = formData.get("aboutme");
@@ -122,6 +84,7 @@ export const ProfileMain = () => {
             toast.success("Your 'About Me' is updated!");
 
             fetchProfile(currentUser.id);
+            fetchPrUserInfo(id);
         } catch {
             toast.error("Something went wrong! Please try again");
         }
@@ -157,19 +120,7 @@ export const ProfileMain = () => {
                     </button>}
                 </div>
 
-                <div className = 'nameArea_displayStats'>                    
-                    {previewUser.id != currentUser.id && <button className = 'display_opts'
-                        onClick = {e=>{
-                            if (dropdown == null)
-                                renderOverlay(e);
-                            else
-                                setDropdown(null);
-                        }}>
-                        <img src = {"../png/more.png"} alt=""/>
-                    </button>}
-                    
-                    {dropdown}
-
+                <div className = 'nameArea_displayStats'>
                     <div className = 'display_stats'>
                         <div className = 'display_stat'>
                             <span> Friends </span>

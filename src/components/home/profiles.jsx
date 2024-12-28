@@ -40,26 +40,26 @@ export const Profiles = () => {
                 <button className = 'buttonTab'
                     onClick={() => redirectToPage("/chat")}>
                     <img src = {"../png/chat.png"} alt=""/>
-                    <p> Chat </p>
+                    <p> Secure Chat </p>
                 </button>
 
                 <div className = 'sep'/>
 
                 <button className = 'buttonTab'
-                    onClick={() => redirectToPage("/schedule")}>
-                    <img src = {"./png/schedule.png"} alt=""/>
+                    onClick={() => redirectToPage("/schedule/" + currentUser.id)}>
+                    <img src = {"../png/schedule.png"} alt=""/>
                     <p> Schedules </p>
                 </button>
 
                 <button className = 'buttonTab'
                     onClick={() => redirectToPage("/task")}>
-                    <img src = {"./png/clipboard.png"} alt=""/>
+                    <img src = {"../png/clipboard.png"} alt=""/>
                     <p> Tasks </p>
                 </button>
 
                 <button className = 'buttonTab'
                     onClick={() => redirectToPage("/quiz")}>
-                    <img src = {"./png/choose.png"} alt=""/>
+                    <img src = {"../png/choose.png"} alt=""/>
                     <p> Quizs </p>
                 </button>
 
@@ -67,13 +67,8 @@ export const Profiles = () => {
 
                 <button className = 'buttonTab'
                     onClick={() => redirectToPage("/friend")} >
-                    <img src = {"./png/friends.png"} alt=""/>
-                    <p> Friends </p>
-                </button>
-
-                <button className = 'buttonTab'>
                     <img src = {"../png/contact-book.png"} alt=""/>
-                    <p> Manage </p>
+                    <p> Relations </p>
                 </button>
         </div>
     )

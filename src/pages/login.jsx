@@ -4,17 +4,22 @@ import './login.css';
 import { toast } from 'react-toastify';
 import {auth, provider, db} from '../components/dblibs/firebase-config.js';
 import { uploadImage } from '../components/dblibs/uploadImage.js';
-import {onAuthStateChanged, signInWithPopup} from 'firebase/auth';
+import {onAuthStateChanged} from 'firebase/auth';
 import {
     createUserWithEmailAndPassword,
     signInWithEmailAndPassword } from 'firebase/auth';
-import {collection, doc, getDocs, query, setDoc, where} from 'firebase/firestore';
+import {collection, doc, getDoc, getDocs, query, setDoc, updateDoc, where} from 'firebase/firestore';
 
 import {useEffect, useState} from 'react';
 import { useUserStore } from '../components/dblibs/userStore.js';
 import {
     Navigate,
   } from "react-router-dom";
+
+import { useKeyStore } from '../components/dblibs/privateKeyStore.js';
+import { getFunctions, httpsCallable } from 'firebase/functions';
+import crypto from 'crypto';
+import { decrypt, encrypt, handleDecryptKey } from '../components/dblibs/pubprivKeys.js';
 
 export const Auth = (props) => {
     const [avatar, setAvatar] = useState({
@@ -31,57 +36,30 @@ export const Auth = (props) => {
             })
     }
 
-    const signInWithGoogle = async () => {
-        try {
-            await signInWithPopup(auth, provider)
-            .then(async (res) => {
-                props.fetchUserInfo(res.user.uid);
-
-                const username = res.user.displayName;
-                const email = res.user.email;
-                
-                const userRef = collection(db, "users");
-                const q = query(userRef, where("id", "==", res.user.uid));
-                const querySnapShot = await getDocs(q)        
-
-                if (!querySnapShot.empty) return;
-
-                await setDoc(
-                    doc(db, "users", res.user.uid), {
-                        username,
-                        avatar: res.user.photoURL,
-                        email,
-                        id : res.user.uid,
-                        blocked:[],
-                        friends:[]
-                    }
-                )
-    
-                await setDoc(
-                    doc(db, "userchats", res.user.uid), {
-                        chats:[],
-                    }
-                )
-
-                toast.success("Success! Logging in...")
-            })
-        }
-        catch(err) {
-            toast.error(err.message);
-        }
-    }
-
     const handleNormalLogin = async(e) => {
         e.preventDefault();
         const formData = new FormData(e.target);
         const {email, password} = Object.fromEntries(formData);
 
-        await signInWithEmailAndPassword(auth, email, password)
-        .then((userCredential) => {
+        signInWithEmailAndPassword(auth, email, password)
+        .then(async (userCredential) => {
             const user = userCredential.user;
-            props.fetchUserInfo(user.uid);
+            const userDoc = await getDoc(doc(db, 'users', user.uid));
 
-            toast.success("Success! Logging in...")
+            const en_privKey = userDoc.data().encryptedPrivateKey;
+            const privateKey = handleDecryptKey(en_privKey,
+                userDoc.data().iv,
+                password
+            )
+
+            props.fetchUserInfo(user.uid);
+            props.setKey(user.uid, {
+                publicKey: userDoc.data().publicKey,
+                privateKey,
+            });
+            
+            console.log("Retrieved private key:", privateKey);
+            toast.success("Success! Logging in...");
           })
           .catch((err) => {
             toast.error(err.message);
@@ -93,38 +71,91 @@ export const Auth = (props) => {
         
         const formData = new FormData(e.target);
         const {username, email, password} = Object.fromEntries(formData);
+        let imgUrl = "https://firebasestorage.googleapis.com/v0/b/testyappayappadoo.firebasestorage.app/o/avatars%2Fundeadbasketballplayer.png?alt=media&token=d49e2bf4-ddfe-4393-8e2f-0b6876754876";
+        
+        createUserWithEmailAndPassword(auth, email, password)
+        .then(async (res)=>{
+            const makeKeyPairs = httpsCallable(getFunctions() , 'makeKeyPairs')
+            try {
+                console.log(auth.currentUser);
 
-        try {
-            const res = await createUserWithEmailAndPassword(auth, email, password);
-            let imgUrl = "https://firebasestorage.googleapis.com/v0/b/testyappayappadoo.firebasestorage.app/o/avatars%2FdefaultImage.png?alt=media&token=bf049c85-3319-453f-b866-147aefded51b";
+                const data = {password};
+                const resi= await makeKeyPairs(data);
+                // console.log('everythign done', resi.data.encryptedPrivateKey);
 
-            if (avatar.file)
-                imgUrl = await uploadImage(avatar.file);
+                let d_cipher = handleDecryptKey(resi.data.encryptedPrivateKey,
+                    resi.data.iv,
+                    password
+                )
 
-            await setDoc(
-                doc(db, "users", res.user.uid), {
-                    username,
-                    avatar: imgUrl,
-                    email,
-                    id : res.user.uid,
-                    blocked:[],
-                }
-            )
+                console.log('everythign done 2\n', d_cipher);
 
-            await setDoc(
-                doc(db, "userchats", res.user.uid), {
-                    chats:[],
-                }
-            )
+                const encrypted = encrypt('This is a test', resi.data.publicKey);
+                console.log("Encrypted: ", encrypted);
+              
+                const decrypted = decrypt(encrypted, d_cipher);
+                console.log('Decrypted: ', decrypted);
 
-            toast.success("Account created! Logging in...")
+                await setDoc(
+                    doc(db, "users", res.user.uid), {
+                        username,
+                        avatar: imgUrl,
+                        email,
+                        id : res.user.uid,
+                        blocked:[],
+                        friends:[],
+                        pendingFR:[],
+                    }, {merge: true}
+                )
+    
+                await setDoc(
+                    doc(db, "userchats", res.user.uid), {
+                        chats:[],
+                        roomIds: [],
+                    }, {merge: true}
+                );
 
-            props.fetchUserInfo(res.user.uid);
-        }
-        catch (err)
-        {
+                props.setKey(res.user.uid, {
+                    publicKey: resi.data.publicKey,
+                    privateKey: d_cipher
+                });
+
+                toast.success("Account created! Logging in...");
+                props.fetchUserInfo(res.user.uid);    
+            } catch(err)
+            {
+                console.log(err);
+            }
+        })
+        .catch((err)=>{
             toast.error(err.message);
-        }
+        });
+        
+
+        // if (avatar.file)
+        //     imgUrl = await uploadImage(avatar.file);
+
+        // await setDoc(
+        //     doc(db, "users", res.user.uid), {
+        //         username,
+        //         avatar: imgUrl,
+        //         email,
+        //         id : res.user.uid,
+        //         blocked:[],
+        //         friends:[],
+        //         pendingFR:[],
+        //     }
+        // )
+
+        // await setDoc(
+        //     doc(db, "userchats", res.user.uid), {
+        //         chats:[],
+        //         roomIds: [],
+        //     }
+        // )
+
+
+        //props.fetchUserInfo(res.user.uid);
     }
 
     return <div className = "login">
@@ -134,7 +165,6 @@ export const Auth = (props) => {
                 <input type = "text" placeholder='Email' name = "email"/>
                 <input type = "password" placeholder='Password' name = "password"/>
                 <button>Sign In</button>
-                <button type = "button" className = "specialButton" onClick={signInWithGoogle}>Sign in With Google Account</button>
             </form>
         </div>
         <div className='separator'>
@@ -157,30 +187,45 @@ export const Auth = (props) => {
 
 export const Login = () => {
     const {currentUser, isLoading, fetchUserInfo, resetUserInfo} = useUserStore();
-    
+    const {id, keys, setKey, resetKey} = useKeyStore();
+
     useEffect( ()=>{
         const unSub = onAuthStateChanged(auth, (user)=> {
-          console.log(auth.currentUser);
-          if (!user)
-          {
+            console.log(auth.currentUser);
+            if (!user)
+            {
             resetUserInfo();
+            resetKey();
             return;
-          }
-          fetchUserInfo(user.uid);
+            }
+
+            if (id !== null && user.uid !== id)
+            {
+                console.warn("I Did logged out btw");
+                resetUserInfo();
+                resetKey();
+                auth.signOut();
+                return;
+            }
+
+            fetchUserInfo(user.uid);
         });
-    
+
         return () => {
-          unSub();
+            unSub();
         }
-      },[fetchUserInfo]);
-    
-      console.log(currentUser);
-    
-      if (isLoading) return <div>TEST LOADING</div>;
-  
+    },[fetchUserInfo]);
+
+    console.log(currentUser);
+
+    if (isLoading) return <div>TEST LOADING</div>;
+
+    console.log("Final: ", id, ' - keys: ', keys);
+
+
     return (
         (!currentUser? <div className = "container">
-        <Auth fetchUserInfo={fetchUserInfo}/>
+        <Auth fetchUserInfo={fetchUserInfo} setKey = {setKey}/>
         <Notification/>
         </div> : <Navigate to="/home" replace={true}/>
         )

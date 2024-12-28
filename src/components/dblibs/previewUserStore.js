@@ -2,15 +2,16 @@ import { doc, getDoc } from 'firebase/firestore';
 import { create } from 'zustand'
 import { db } from './firebase-config';
 
-const defaultState = {previewUser:null, isLoading: false, curUserProf: null};
+const defaultState = {previewUser:null, isLoading: false, curUserProf: null, curUserMore: null};
 
 export const usePreviewStore = create((set) => ({
   previewUser: null,
   isLoading: true,
   curUserProf: null,
+  curUserMore: {},
 
   fetchPrUserInfo: async (uid) => {
-    if (!uid) return set({previewUser:null, isLoading: false, curUserProf: null});
+    if (!uid) return set(defaultState);
 
     try{
         const docRef = doc(db, "users", uid);
@@ -22,14 +23,14 @@ export const usePreviewStore = create((set) => ({
                 isLoading: false}));
             }
         else
-            set({previewUser:null, isLoading: false, curUserProf: null});
+            set(defaultState);
     } catch {
-        set({previewUser:null, isLoading: false, curUserProf: null});
+        set(defaultState);
     }
   },
 
   resetUserInfoForLoading: () => {
-    set({previewUser:null, isLoading: true, curUserProf: null});
+    set({previewUser:null, isLoading: true, curUserProf: null, curUserMore: null});
   },
 
   resetUserInfo: () => {
@@ -37,7 +38,7 @@ export const usePreviewStore = create((set) => ({
   },
 
   fetchProfile: async (uid) => {
-    if (!uid) return set(defaultState);
+    if (!uid) return set(state=>({...state, curUserProf: null}));
 
     try{
         const docRef = doc(db, "profile", uid);
@@ -46,9 +47,36 @@ export const usePreviewStore = create((set) => ({
         if (docSnap.exists())
             set(state=>({...state, curUserProf: docSnap.data().profileText}));
         else
-            set(defaultState)
+            set(state=>({...state, curUserProf: null}))
     } catch {
-        set(defaultState)
+        set(state=>({...state, curUserProf: null}))
+    }
+  },
+
+  fetchProfileSubstitute: async (uid, type, defVal) => {
+    if (!uid) return set(state=>({...state}));
+
+    try{
+        const docRef = doc(db, type, uid);
+        const docSnap = await getDoc(docRef);
+
+        if (docSnap.exists())
+            set(state=>{
+              let test = {
+                ...state,
+                curUserMore: {
+                  ...state.curUserMore,
+                  }
+              }
+
+              test['curUserMore'][type] = docSnap.data();
+
+              return test;
+            });
+        else
+            set(state=>({...state}));
+    } catch {
+      set(state=>({...state}));
     }
   },
 

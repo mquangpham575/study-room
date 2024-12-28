@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import './quizMain.css';
 import { db } from '../dblibs/firebase-config';
-import { collection, addDoc, getDocs, query, where, deleteDoc, doc } from 'firebase/firestore';
+import { collection, addDoc, getDocs, query, where, deleteDoc, doc, getDoc } from 'firebase/firestore';
+import { useUserStore } from '../dblibs/userStore';
 
 const Timer = ({ seconds, onTimeUp, isActive }) => {
   const [timeLeft, setTimeLeft] = useState(seconds);
@@ -21,7 +22,7 @@ const Timer = ({ seconds, onTimeUp, isActive }) => {
   return <div className="timer">Time left: {timeLeft}s</div>;
 };
 
-const Quiz = ({ questions, onStartQuiz, isQuizStarted, onTryAgain }) => {
+const Quiz = ({ quizTimeLimit, questions, onStartQuiz, isQuizStarted, onTryAgain }) => {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [showScore, setShowScore] = useState(false);
   const [score, setScore] = useState(0);
@@ -93,7 +94,7 @@ const Quiz = ({ questions, onStartQuiz, isQuizStarted, onTryAgain }) => {
             ))}
           </div>
           <button className="next-button" onClick={handleNextQuestion}>Next</button>
-          <Timer seconds={120} onTimeUp={handleTimeUp} isActive={isQuizStarted} />
+          <Timer seconds={quizTimeLimit} onTimeUp={handleTimeUp} isActive={isQuizStarted} />
         </>
       )}
     </div>
@@ -128,7 +129,7 @@ const AddQuestionForm = ({ onAddQuestion, isQuizStarted, quizId }) => {
     const newQuestion = { questionText, answerOptions, quizId };
 
     try {
-      const docRef = await addDoc(collection(db, 'questions'), newQuestion);
+      const docRef = await addDoc(collection(db, 'quizzes', quizId, 'questions'), newQuestion);
       const newQuestionWithId = { ...newQuestion, id: docRef.id };
       onAddQuestion(newQuestionWithId);
     } catch (error) {
@@ -185,10 +186,12 @@ const AddQuestionForm = ({ onAddQuestion, isQuizStarted, quizId }) => {
 
 const CreateQuizForm = ({ onCreateQuiz }) => {
   const [quizName, setQuizName] = useState('');
+  const [quizTimeLimit, setQuizTimeLimit] = useState(120);
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onCreateQuiz(quizName);
+    onCreateQuiz(quizName, quizTimeLimit);
+    setQuizTimeLimit(120);
     setQuizName('');
   };
 
@@ -202,6 +205,15 @@ const CreateQuizForm = ({ onCreateQuiz }) => {
           placeholder="Enter quiz name"
           required
         />
+
+        <input
+          type="text"
+          value={quizTimeLimit}
+          onChange={(e) => setQuizTimeLimit(Number(e.target.value))}
+          placeholder="Enter time limit (default: 120s)"
+          required
+        />
+
       </label>
       <button type="submit" className="create-quiz-button">Create Quiz</button>
     </form>
@@ -236,7 +248,8 @@ const QuizList = ({ quizzes, onSelectQuiz, onDeleteQuiz }) => {
   );
 };
 
-export function QuizApp() {
+export function QuizApp({quizId}) {  
+  const {currentUser} = useUserStore();
   const [questions, setQuestions] = useState([]);
   const [isQuizStarted, setIsQuizStarted] = useState(false);
   const [selectedQuizId, setSelectedQuizId] = useState('');
@@ -245,45 +258,50 @@ export function QuizApp() {
   const [showAllQuestions, setShowAllQuestions] = useState(false);
 
   useEffect(() => {
+    if (quizId) return;
+    
     const fetchQuizzes = async () => {
-      const querySnapshot = await getDocs(collection(db, 'quizzes'));
-      const fetchedQuizzes = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      const querySnapshot = await getDocs(query(collection(db, 'quizzes'), where("owner", "==", currentUser.id)));
+      const fetchedQuizzes = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data()  }));
+      
+      console.log(fetchedQuizzes);
+      
       setQuizzes(fetchedQuizzes);
     };
 
-    fetchQuizzes();
+    return ()=>fetchQuizzes();
   }, []);
 
   useEffect(() => {
     const fetchQuestions = async () => {
       if (selectedQuizId) {
-        const q = query(collection(db, 'questions'), where('quizId', '==', selectedQuizId));
+        const q = collection(db, 'quizzes', selectedQuizId, 'questions');
+        
         const querySnapshot = await getDocs(q);
         const fetchedQuestions = querySnapshot.docs.map(doc => ({ 
           id: doc.id, 
           ...doc.data() 
         }));
+
+        if (quizId)
+          {
+            const docSnap = await getDoc(doc(db, 'quizzes', quizId));
+
+            const fetchedQuizzes = docSnap.data();
+
+            if (fetchedQuizzes !== undefined)
+            {
+              fetchedQuizzes.id = quizId;
+              setQuizzes(fetchedQuizzes);
+            }     
+          }  
+
         setQuestions(fetchedQuestions);
       }
     };
 
     fetchQuestions();
   }, [selectedQuizId]);
-
-  const addQuestion = (newQuestion) => {
-    setQuestions([...questions, newQuestion]);
-  };
-
-  const handleDeleteQuestion = async (questionId) => {
-    try {
-      const questionDocRef = doc(db, 'questions', questionId);
-      await deleteDoc(questionDocRef);
-
-      setQuestions(questions.filter(q => q.id !== questionId));
-    } catch (error) {
-      console.error('Error deleting question: ', error);
-    }
-  };
 
   const handleStartQuiz = () => {
     setIsQuizStarted(true);
@@ -294,8 +312,49 @@ export function QuizApp() {
     setIsQuizStarted(false);
   };
 
-  const handleCreateQuiz = async (quizName) => {
-    const newQuiz = { quizName };
+  if (quizId !== undefined)
+  {
+    if (selectedQuizId !== quizId)
+      setSelectedQuizId(quizId);
+
+    return (
+      <div className="App">
+        <h1>{questions.length !== 0? quizzes.quizName 
+        : "This quiz has no questions, you don't have permission to do it, or it doesn't exist..."}</h1>
+        {questions.length !== 0 && <Quiz
+        quizTimeLimit = {quizzes.timeLimit}
+        questions={questions}
+        onStartQuiz={handleStartQuiz}
+        isQuizStarted={isQuizStarted}
+        onTryAgain={handleTryAgain}
+      />}
+      </div>
+    )
+  }
+
+  const addQuestion = (newQuestion) => {
+    setQuestions([...questions, newQuestion]);
+  };
+
+  const handleDeleteQuestion = async (quizId, questionId) => {
+    try {
+      const questionDocRef = doc(collection(db, 'quizzes', quizId, 'questions'), questionId);
+      await deleteDoc(questionDocRef);
+
+      setQuestions(questions.filter(q => q.id !== questionId));
+    } catch (error) {
+      console.error('Error deleting question: ', error);
+    }
+  };
+
+  const handleCreateQuiz = async (quizName, quizTimeLimit) => {
+    if (typeof(quizName) != 'string' || typeof(quizTimeLimit) != 'number') return;
+    
+    const newQuiz = { 
+      quizName,
+      owner: currentUser.id,
+      timeLimit: quizTimeLimit,
+     };
 
     try {
       const docRef = await addDoc(collection(db, 'quizzes'), newQuiz);
@@ -334,7 +393,7 @@ export function QuizApp() {
       <h1>Quiz App</h1>
       {!isQuizSelected ? (
         <>
-          <CreateQuizForm onCreateQuiz={(quizName) => handleCreateQuiz(quizName)} />
+          <CreateQuizForm onCreateQuiz={(quizName, tl) => handleCreateQuiz(quizName, tl)} />
           <QuizList quizzes={quizzes} onSelectQuiz={handleSelectQuiz} onDeleteQuiz={handleDeleteQuiz} />
         </>
       ) : (
@@ -361,7 +420,7 @@ export function QuizApp() {
                       </div>
                       <button 
                         className="delete-question-button" 
-                        onClick={() => handleDeleteQuestion(question.id)}
+                        onClick={() => handleDeleteQuestion(question.quizId, question.id)}
                       >
                         Delete
                       </button>
@@ -371,6 +430,7 @@ export function QuizApp() {
               )}
             </div>
           )}
+          
           <AddQuestionForm 
             onAddQuestion={addQuestion} 
             isQuizStarted={isQuizStarted} 
@@ -383,6 +443,7 @@ export function QuizApp() {
       )}
       {isQuizStarted && (
         <Quiz
+          quizTimeLimit = {quizzes.find(e=>e.id === selectedQuizId).timeLimit}
           questions={questions}
           onStartQuiz={handleStartQuiz}
           isQuizStarted={isQuizStarted}

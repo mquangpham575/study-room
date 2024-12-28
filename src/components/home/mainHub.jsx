@@ -31,21 +31,6 @@ export const MainHub = (props) => {
         auth.signOut();
     }
 
-    const handleTest = async () => {
-        console.log(auth);
-        const myFunction = httpsCallable(getFunctions() , 'myFunction')
-
-        try {
-            const data = {}
-            const res= await myFunction(data);
-
-            console.log(res.data)
-        } catch(err)
-        {
-            console.log(err);
-        }
-    }
-
     return (
         <div className='mainHub'>
 
@@ -55,9 +40,6 @@ export const MainHub = (props) => {
                 <div/>
 
                 <div className = 'info'>
-                    <button>
-                        <img src = {"../png/bell.png"} alt=""/>
-                    </button>
                     <div className = 'info_container'>
                         <button className = 'hiddenDropdown' onClick={onClick}>
                             {currentUser.avatar?
@@ -69,7 +51,6 @@ export const MainHub = (props) => {
                         </button>
                         <div className="dropdown-content"
                             style = {collState ? { display:"flex" } : { display:"none" }}>
-                            <button onClick={handleTest}> Test button lmao </button>
                             <button onClick={() => redirectToPage("/profile/" + currentUser.id)}> About </button>
                             <button onClick = {LogOut}> Logout </button>
                         </div>

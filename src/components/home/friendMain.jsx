@@ -1,155 +1,296 @@
-import { collection, doc, getDoc, getDocs, setDoc, deleteDoc } from 'firebase/firestore';
-import { db, auth } from '../dblibs/firebase-config'; // Importing the initialized Firestore instance
+import { collection, doc, getDocs, query, limit, where, updateDoc, arrayUnion, arrayRemove, onSnapshot } from 'firebase/firestore';
+import { db } from '../dblibs/firebase-config';
 import { onAuthStateChanged } from 'firebase/auth';
 import './friendMain.css';
 import React, { useState, useEffect } from 'react';
+import { useUserStore } from '../dblibs/userStore';
+import { toast } from 'react-toastify';
+import { getFunctions, httpsCallable } from 'firebase/functions';
+import { useKeyStore } from '../dblibs/privateKeyStore';
 
 export const FriendMain = () => {
+    const { savedPassword } = useKeyStore();
     const buttonNames = [
-        'Currently Online',
         'Friends',
-        'Friends Request',
-        'Find Friends'
+        'Friend Requests',
+        'Find Friends',
+        'Blocked',
     ];
 
-    const [usersList, setUsersList] = useState([]); // State to hold the list of users
-    const [requestFriendList, setRequestFriendList] = useState([]); // State to hold the list of users
-    const [friendList, setFriendList] = useState([]);
-    const [activeSection, setActiveSection] = useState(buttonNames[0]); // Track which button is clicked
-    const [currentUser, setCurrentUser] = useState(null);
-
-    const [searchTerm, setSearchTerm] = useState(""); // State for search input
-
-    const filterSearch = (items) => {
-        return items.filter((item) =>
-            item.username.toLowerCase().includes(searchTerm.toLowerCase())
-        );
-    }
-
-
-    useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, (user) => {
-            if (user) {
-                setCurrentUser(user); // Save in state for better access
-            } else {
-                console.error("No user is logged in.");
-            }
-        });
-        return () => unsubscribe();
-    }, []);
-
-    const changeDataState = (variableState, user) => {
-        variableState((prevFriendList) => {
-            // Check if the user is already in the list
-            const isUserExists = prevFriendList.some(friend => friend.id === user.id);
+    const [usersList, setUsersList] = useState([]);
+    const [activeSection, setActiveSection] = useState(buttonNames[0]);
+    const {currentUser, rawFetch} = useUserStore();
     
-            if (isUserExists) {
-                // If user already exists, return the list unchanged
-                return prevFriendList;
-            }
-    
-            // If user doesn't exist, add the user to the list
-            return [...prevFriendList, user];
-        });
-    };
-    
-
-    // Handle querying all users
-    const handleQueryUser = async () => {
-        if (!currentUser) return;
+    const handleQueryUser = async (filterText) => {
         try {
-            const loggedInUser = currentUser;
-            const usersRef = collection(db, 'users');
-            const snapshot = await getDocs(usersRef);
+            console.log(filterText);
 
-            const requestIds = await handleQuerySubcollection(currentUser, 'requestFriend');
-            const friendIds = await handleQuerySubcollection(currentUser, 'friend');
+            switch (activeSection)
+            {
+                case 'Find Friends': {
+                    let usersRef = null;
 
-            const usersData = snapshot.docs
-                .filter((doc) => doc.id !== loggedInUser.uid)
-                .map(doc => {
-                    const data = doc.data();
-                    return {
-                        id: doc.id,
-                        username: data.username,
-                        avatar: data.avatar,
-                        friend: false
-                    };
-                });
+                    if (filterText)
+                    {
+                        usersRef = query(
+                            collection(db, 'users'),
+                            where('id', '!=', currentUser.id),
+                            where('username', '>=', filterText),
+                            where('username', '<=', filterText+'\uf7ff'),
+                            limit(20));
+                    } else {
+                        usersRef = query(
+                            collection(db, 'users'),
+                            where('id', '!=', currentUser.id),
+                            limit(20));
+                    }
+                    
+                    const snapshot = await getDocs(usersRef);
+                    
+                    const usersData = snapshot.docs
+                        .map(doc => {
+                            const data = doc.data();                                
+                            return data;
+                        })
+                        .filter(x=> !currentUser.friends.includes(x.id)
+                        && !currentUser.pendingFR.includes(x.id)
+                        && !x.friends.includes(currentUser.id)
+                        && !currentUser.blocked.includes(x.id)
+                    );
 
-            setUsersList(usersData.filter(user => !requestIds.has(user.id)));
-            setRequestFriendList(usersData.filter(user => requestIds.has(user.id)));
-            setFriendList(usersData.filter(user => friendIds.has(user.id)));
+                    setUsersList(usersData);
+                    break;
+                }
+                case 'Friend Requests': {
+                    if (currentUser.pendingFR.length === 0)
+                        {setUsersList([]); return;}
+                    
+                    let usersRef = null;
+
+                    if (filterText)
+                    {
+                        usersRef = query(
+                            collection(db, 'users'),
+                            where('id', 'in', currentUser.pendingFR),
+                            where('username', '>=', filterText),
+                            where('username', '<=', filterText+'\uf7ff'),
+                            limit(20));
+                    } else {
+                        usersRef = query(
+                            collection(db, 'users'),
+                            where('id', 'in', currentUser.pendingFR),
+                            limit(20));
+                    }
+
+                    const snapshot = await getDocs(usersRef);
+                    
+                    const usersData = snapshot.docs
+                        .map(doc => {
+                            const data = doc.data();                                
+                            return data;
+                        });
+
+                        setUsersList(usersData);
+                    break;
+                }
+                case 'Friends': {
+                    
+                    if (currentUser.friends.length === 0)
+                        {setUsersList([]); return;}
+
+                    let usersRef = null;
+
+                    if (filterText)
+                    {
+                        usersRef = query(
+                            collection(db, 'users'),
+                            where('id', 'in', currentUser.friends),
+                            where('username', '>=', filterText),
+                            where('username', '<=', filterText+'\uf7ff'),
+                            limit(20));
+                    } else {
+                        usersRef = query(
+                            collection(db, 'users'),
+                            where('id', 'in', currentUser.friends),
+                            limit(20));
+                    }
+        
+                    const snapshot = await getDocs(usersRef);
+
+                    const usersData = snapshot.docs
+                        .map(doc => {
+                            const data = doc.data();
+                            return data;
+                        });
+                    
+                    console.log(usersData);
+
+                    setUsersList(usersData);
+                    break;
+                }
+                case 'Blocked': {
+                    if (currentUser.blocked.length === 0)
+                        {setUsersList([]); return;}
+
+                    let usersRef = null;
+
+                    if (filterText)
+                    {
+                        usersRef = query(
+                            collection(db, 'users'),
+                            where('id', 'in', currentUser.blocked),
+                            where('username', '>=', filterText),
+                            where('username', '<=', filterText+'\uf7ff'),
+                            limit(20));
+                    } else {
+                        usersRef = query(
+                            collection(db, 'users'),
+                            where('id', 'in', currentUser.blocked),
+                            limit(20));
+                    }
+
+                    const snapshot = await getDocs(usersRef);
+
+                    const usersData = snapshot.docs
+                        .map(doc => {
+                            const data = doc.data();                                
+                            return data;
+                        });
+                    
+                    console.log(usersData);
+
+                    setUsersList(usersData);
+                    break;
+                }
+            }
         } catch (error) {
             console.error("Error getting documents: ", error);
         }
     };
 
-    // Handle querying a subcollection
-    const handleQuerySubcollection = async (user, subcollection) => {
-        try {
-            const userRef = collection(db, 'users', user.uid, subcollection);
-            const snapshot = await getDocs(userRef);
-            return new Set(snapshot.docs.map(doc => doc.id));
-        } catch (error) {
-            console.error(`Error fetching subcollection '${subcollection}':`, error);
-            return new Set();
-        }
-    };
+    useEffect(()=>{
+        const unsub = onSnapshot(doc(db, "users", currentUser.id), (doc) => {
+            console.log(doc.data());
+            rawFetch(doc.data());
+        });
+        
+        return()=>unsub();
+    },[rawFetch])
 
     useEffect(() => {
         handleQueryUser();
-    }, [currentUser]);
+    }, [activeSection, currentUser]);
 
-    // Send friend request to another user
+    const searchResult = async (e) => {
+        e.preventDefault();
+
+        const formData = new FormData(e.target);
+        const {searchText} = Object.fromEntries(formData);
+
+        handleQueryUser(searchText);
+    }
+
     const sendRequestAddFriend = async (userB) => {
-        setUsersList(prevUsersList => {
-            return prevUsersList.map(user => {
-                if (user.id === userB.id) {
-                    return { ...user, friend: !user.friend }; // Toggle the 'friend' status
-                }
-                return user;
-            });
-        });
-
         if (!currentUser || !userB || !userB.id) {
             console.log("Invalid users or missing userB ID");
             return;
         }
 
         try {
-            const userBRef = doc(db, "users", userB.id, "requestFriend", currentUser.uid);
-            const requestSnapshotUserB = await getDoc(userBRef);
+            console.log(userB);
+            if (userB.pendingFR.includes(currentUser.id))
+            {
+                const userBRef = doc(db, "users", userB.id);
+                await updateDoc(userBRef, {
+                    pendingFR: arrayRemove(currentUser.id)
+                });
+                
+                setUsersList(prevUsersList => {
+                    return prevUsersList.map(user => {
+                        if (user.id === userB.id) {
+                             
+                            return { ...user,
+                                pendingFR: user.pendingFR.filter(x=>x !== currentUser.id)
+                             };
+                        }
+                        return user;
+                    });
+                });
+                
+                toast.success('Removed request successfully!');
+            } else {
+                const userBRef = doc(db, "users", userB.id);
+                await updateDoc(userBRef, {
+                    pendingFR: arrayUnion(currentUser.id)
+                });
+                
+                setUsersList(prevUsersList => {
+                    return prevUsersList.map(user => {
+                        if (user.id === userB.id) {
+                            if (!user.pendingFR.includes(currentUser.id))
+                                user.pendingFR.push(currentUser.id);
+                            return user;
+                        }
+                        return user;
+                    });
+                });
 
-            if (!requestSnapshotUserB.exists()) {
-                await setDoc(userBRef, { id: currentUser.uid });
-                setUsersList(prev => prev.map(user => user.id === userB.id ? { ...user, friend: true } : user));
+                toast.success('Given request successfully!');    
             }
         } catch (e) {
-            console.error(e);
+            toast.error('Error: '+ e.message);
         }
     };
 
-    // Accept friend request
-    const acceptFriend = async (userB) => {
+    const sendRequestBlock = async (userB) => {
+        const blockUser = httpsCallable(getFunctions() , 'blockUser')
+
         try {
-            const userARef = doc(db, "users", currentUser.uid, 'friend', userB.id); // 'friend' is a subcollection
-            const userBRef = doc(db, "users", userB.id, 'friend', currentUser.uid);
+            const data = {blockid: userB.id};
+            const res= await blockUser(data);
 
-            // Reference to the requestFriend subcollections to remove the request
-            const requestRefA = doc(db, "users", currentUser.uid, 'requestFriend', userB.id);
+            toast.success('Successfully blocked user!');
+        } catch(err)
+        {
+            console.log(err);
+        }
+    //     try {
+    //         const userARef = doc(db, "users", currentUser.id);
+    //         const userBRef = doc(db, "users", userB.id);
 
-            await Promise.all([
-                setDoc(userARef, { id: userB.id, username: userB.username, avatar: userB.avatar }),
-                setDoc(userBRef, { id: currentUser.uid, username: currentUser.displayName, avatar: currentUser.photoURL }),
+    //         await Promise.all([
+    //             updateDoc(userARef, {
+    //                 blocked: arrayUnion(userB.id),
+    //                 friends: arrayRemove(userB.id),
+    //                 pendingFR: arrayRemove(userB.id)
+    //             }),
+    //             updateDoc(userBRef, {
+    //                 friends: arrayRemove(currentUser.id),
+    //                 pendingFR: arrayRemove(currentUser.id)
+    //              }),
+    //         ]);
 
-                deleteDoc(requestRefA)
-            ]);
-            changeDataState(setFriendList, userB); // Update friend list state
-            setRequestFriendList(prevList => prevList.filter(user => user.id !== userB.id));
-            console.log(`Friendship established between ${currentUser.displayName} and ${userB.username}.`);
-        } catch (error) {
-            console.error("Error establishing mutual friendship: ", error);
+    //         setUsersList(prevList => prevList.filter(user => user.id !== userB.id));
+    //         currentUser.pendingFR = currentUser.pendingFR.filter(x=>x !== userB.id);
+    //         currentUser.friends = currentUser.friends.filter(x=>x !== userB.id);
+    //         toast.success('Successfully blocked user!')
+    // } catch (error) {
+    //         toast.error("Error: " + error.message)
+    //     }
+    };
+
+    const acceptFriend = async (userB) => {
+
+        const acceptFRFunc = httpsCallable(getFunctions() , 'acceptFR')
+
+        try {
+            const data = {frid: userB.id, password: savedPassword};
+            const res= await acceptFRFunc(data);
+
+            toast.success('Successfully added friend!');
+        } catch(err)
+        {
+            console.log(err);
         }
     };
 
@@ -158,19 +299,59 @@ export const FriendMain = () => {
             console.error("Invalid userB: Cannot unfriend.");
             return;
         }
+
+        const unfriend = httpsCallable(getFunctions() , 'unfriend')
+
         try {
-            const userARef = doc(db, "users", currentUser.uid, 'friend', userB.id); 
-            const userBRef = doc(db, "users", userB.id, 'friend', currentUser.uid);
-            await Promise.all([
-                deleteDoc(userARef),
-                deleteDoc(userBRef)
-            ]);
-            setFriendList(prevList => prevList.filter(user => user.id !== userB.id));
-        } catch(error) {
-            console.error("Error while unfriending user:", error);
+            const data = {frid: userB.id};
+            const res= await unfriend(data);
+
+            toast.success('Successfully removed friend!');
+        } catch(err)
+        {
+            console.log(err);
         }
+
+        // try {
+        //     const userARef = doc(db, "users", currentUser.id);
+        //     const userBRef = doc(db, "users", userB.id);
+
+        //     await Promise.all([
+        //         updateDoc(userARef, {
+        //             friends: arrayRemove(userB.id),
+        //         }),
+        //         updateDoc(userBRef, {
+        //             friends: arrayRemove(currentUser.id),
+        //          }),
+        //     ]);
+
+        //     setUsersList(prevList => prevList.filter(user => user.id !== userB.id));
+        //     currentUser.friends = currentUser.friends.filter(x=>x !== userB.id);
+        //     toast.success('Successfully removed friend!')
+        // } catch(error) {
+        //     toast.error("Error: " + error.message)
+        // }
     };
 
+    const unBlock = async (userB) => {
+        if (!userB || !userB.id) {
+            console.error("Invalid user: Cannot unfriend.");
+            return;
+        }
+        try {
+            const userARef = doc(db, "users", currentUser.id);
+
+            await updateDoc(userARef, {
+                blocked: arrayRemove(userB.id),
+            });
+
+            setUsersList(prevList => prevList.filter(user => user.id !== userB.id));
+            currentUser.blocked = currentUser.blocked.filter(x=>x !== userB.id);
+            toast.success('Successfully unblocked!')
+        } catch(error) {
+            toast.error("Error: " + error.message)
+        }
+    };
 
     // Button click handler to set the active section
     const handleButtonClick = (sectionName) => {
@@ -180,9 +361,11 @@ export const FriendMain = () => {
     return (
         <div className='friend'>
             <div className='search-bar'>
-                <h3>Friends</h3>
+                <h3>Relations</h3>
 
-                <input onChange={(e) => setSearchTerm(e.target.value)} type='text' placeholder='Search friends' />
+                <form onSubmit={searchResult}>
+                    <input type='text' placeholder='Search' name='searchText'/>
+                </form>
 
             </div>
 
@@ -191,21 +374,18 @@ export const FriendMain = () => {
                     <button
                         key={name}
                         onClick={() => handleButtonClick(name)}
-                        className={activeSection === name ? 'active' : ''}
-                    >
+                        className={activeSection === name ? 'active' : null}>
                         {name}
                     </button>
                 ))}
             </div>
 
             <div className="content-section">
-                {activeSection === 'Currently Online' && <p>Displaying Currently Online Users</p>}
-
                 {activeSection === 'Friends' && (
                     <div className="scroll-container">
 
                         <ul>
-                            {filterSearch(friendList).map(user => (
+                            {usersList.map(user => (
                                 <li key={user.id} className='user-item'>
                                     <img src={user.avatar} alt={user.username} className="user-avatar" />
                                     <span>{user.username}</span>
@@ -217,11 +397,11 @@ export const FriendMain = () => {
                     </div>
                 )}
 
-                {activeSection === 'Friends Request' && (
+                {activeSection === 'Friend Requests' && (
                     <div className="scroll-container">
 
                         <ul>
-                            {filterSearch(requestFriendList).map(user => (
+                            {usersList.map(user => (
 
                                 <li key={user.id} className='user-item'>
                                     <img src={user.avatar} alt={user.username} className="user-avatar" />
@@ -236,12 +416,26 @@ export const FriendMain = () => {
                 {activeSection === 'Find Friends' && (
                     <div className="scroll-container">
                         <ul>
-                            {filterSearch(usersList).map(user => (
-
+                            {usersList.map(user => (
                                 <li key={user.id} className='user-item'>
                                     <img src={user.avatar} alt={user.username} className="user-avatar" />
                                     <span>{user.username}</span>
-                                    <button onClick={() => sendRequestAddFriend(user)}>{user.friend ? 'Cancel' : 'Add friend'}</button>
+                                    <button onClick={() => sendRequestAddFriend(user)}>{user.pendingFR.includes(currentUser.id) ? 'Cancel' : 'Add friend'}</button>
+                                    <button onClick={() => sendRequestBlock(user)}>Block</button>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                )}
+
+                {activeSection === 'Blocked' && (
+                    <div className="scroll-container">
+                        <ul>
+                            {usersList.map(user => (
+                                <li key={user.id} className='user-item'>
+                                    <img src={user.avatar} alt={user.username} className="user-avatar" />
+                                    <span>{user.username}</span>
+                                    <button onClick={() => unBlock(user)}>Unblock</button>
                                 </li>
                             ))}
                         </ul>

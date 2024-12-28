@@ -44,6 +44,7 @@
             }
 
             img {
+                object-fit: cover;
                 width: 40px;
                 height: 40px;
                 border-radius: 50%;
@@ -246,6 +247,149 @@
                     cursor: pointer;
                 }
 
+                .chat_QuizBox {
+                    padding: 10px;
+    
+                    width: fit-content;
+                    width: 50%;
+                    min-height: 80px;
+                    height: auto;
+                    word-break: break-word;
+                    
+                    display: flex;
+                    flex-direction: row-reverse;
+
+                    align-items: stretch;
+                    background-color: rgba(10, 10, 10, 0.8);
+                    border-radius: 15px;
+                    gap: 10px;
+            
+                    &.Self {
+                        flex-direction: row;
+
+                        button {
+                            background-color:rgba(0, 203, 200, 0.592);
+                            
+                            border-radius: 0px;
+                            border-top-left-radius: 15px;
+                            border-bottom-left-radius: 15px;
+                        }
+                    }
+
+                    .chat_quizSep {
+                        width: 1px;
+                        background-color: rgba(255, 255, 255, 0.6);
+                    }
+
+                    .chat_quizInfo {
+                        display: flex;
+                        flex-direction: column;
+                        justify-content: space-between;
+                        gap: 5px;
+
+                        &.Self {
+                            span {
+                                text-align: left;
+                            }
+                        }
+
+                        span {
+                            font-size: 15px;
+                            font-style: italic;
+                            text-align: right;
+                        }
+                        
+                        h2 {
+                            font-size: 30px;
+                        }
+                    }
+
+                    button {
+                        cursor: pointer;
+                        width: 75px;
+                        background-color:rgba(0, 203, 200, 0.592);
+                        border: none;
+                        color: white;
+
+                        border-radius: 0px;
+                        border-top-right-radius: 15px;
+                        border-bottom-right-radius: 15px;
+
+                        text-transform: uppercase;
+                    }
+
+                    button:hover {
+                        background-color:rgba(0, 221, 218, 0.592);
+                    }
+                }
+
+                .chat_ScBox {
+                    padding: 10px;
+    
+                    width: fit-content;
+                    width: 60%;
+                    min-height: 80px;
+                    height: auto;
+                    word-break: break-word;
+                    
+                    display: flex;
+                    flex-direction: column-reverse;
+
+                    align-items: center;
+                    background-color: rgba(10, 10, 10, 0.8);
+                    border-radius: 15px;
+                    gap: 10px;
+            
+                    .chat_scSep {
+                        height: 1px;
+                        width: 100%;
+                        background-color: rgba(255, 255, 255, 0.6);
+                    }
+
+                    .chat_scInfo {
+                        display: flex;
+                        flex-direction: column;
+                        justify-content: space-between;
+                        gap: 5px;
+
+                        span {
+                            font-size: 25px;
+                        }
+                    }
+
+                    button {
+                        cursor: pointer;
+                        width: 100%;
+                        padding: 5px;
+                        background-color:rgba(0, 203, 139, 0.592);
+                        border: none;
+                        color: white;
+                        border-radius: 15px;
+                        text-transform: uppercase;
+                    }
+
+                    button:hover {
+                        background-color:rgba(8, 230, 160, 0.592);
+                    }
+
+                    &.Self {
+                        button {
+                            cursor: pointer;
+                            width: 100%;
+                            padding: 5px;
+                            background-color:rgba(0, 203, 200, 0.592);
+                            border: none;
+                            color: white;
+                            border-radius: 15px;
+                            text-transform: uppercase;
+                        }
+    
+                        button:hover {
+                            background-color:rgba(0, 221, 218, 0.592);
+                        }    
+                    }
+                }
+
                 .chat_TextBox {
                     padding: 10px;
     
@@ -257,6 +401,7 @@
                     align-items: stretch;
                     background-color: rgba(7, 172, 133, 0.592);
                     border-radius: 5px;
+                    white-space: pre-line;
                     gap: 20px;
 
                     &.Self {
@@ -325,7 +470,7 @@
             height: 15%;
             width: 100%;
             background-color: transparent;
-            margin-top: auto;
+            margin-top: 10px;
 
             align-items: center;
 

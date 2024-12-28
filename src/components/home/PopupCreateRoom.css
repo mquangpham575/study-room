@@ -9,6 +9,23 @@
   border-radius: 8px;
   z-index: 1000;
   animation: fadeIn 0.3s ease-in-out;
+  
+  input[type="name"] {
+    margin-top: 35px; 
+    margin-bottom: 10px;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 16px;
+  }
+
+  input[type="password"] {
+    margin-bottom: 10px;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 16px;
+  }
 }
 
 @keyframes fadeIn {
@@ -26,6 +43,7 @@
   position: relative;
   display: flex;
   flex-direction: column;
+  gap: 5px;
 }
 
 .close-button-e {
@@ -50,25 +68,12 @@
   color: red;
 }
 
-input[type="name"] {
-  margin-top: 35px; 
-  margin-bottom: 10px;
-  padding: 10px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  font-size: 16px;
-}
-
-input[type="password"] {
-  margin-bottom: 10px;
-  padding: 10px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  font-size: 16px;
+.buttonDisplay {
+  align-self: baseline;
 }
 
 .create-room-button {
-  background: linear-gradient(to right, #ff758c, #ff7eb3);
+  background: linear-gradient(to right, #1a1a1a, #434343);
   border: none;
   color: white;
   padding: 10px 20px;

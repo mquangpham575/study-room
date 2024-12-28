@@ -26,3 +26,26 @@ export const uploadChatImage = async (chatId, file) => {
     );
   })
 }
+
+export const uploadCustomImage = async (chatId, file) => {
+  const date = new Date();
+  const cref = ref(storage, chatId);
+  const storageRef = ref(cref, date + file.name);
+  const uploadTask = uploadBytesResumable(storageRef, file);
+
+  return new Promise((resolve, reject)=>{
+    uploadTask.on('state_changed',
+      (snapshot) => {
+        const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+      }, 
+      (error) => {
+        reject("Something went wrong! " + error.code)
+      }, 
+      () => {
+        getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
+          resolve(downloadURL);
+        });
+      }
+    );
+  })
+}

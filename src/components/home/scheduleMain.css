@@ -59,7 +59,7 @@ header {
 }
 
 .add-event-button:hover {
-  transform: scale(1.2);
+  transform: scale(1.1);
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
 }
 
@@ -167,3 +167,8 @@ header {
   color: #cc0000;
 }
 
+.close-button-e {
+  border: none;
+  background-color: transparent;
+  padding: 10px;
+}

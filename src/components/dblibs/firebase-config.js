@@ -1,7 +1,7 @@
 import { initializeApp } from "firebase/app";
-import { getAuth, GoogleAuthProvider } from 'firebase/auth';
-import { getFirestore } from "firebase/firestore";
-import { getStorage } from "firebase/storage";
+import { connectAuthEmulator, getAuth, GoogleAuthProvider } from 'firebase/auth';
+import { connectFirestoreEmulator, getFirestore } from "firebase/firestore";
+import { connectStorageEmulator, getStorage } from "firebase/storage";
 import { getFunctions } from 'firebase/functions';
 import { connectFunctionsEmulator } from 'firebase/functions';
 
@@ -16,11 +16,14 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 
-if (process.env.NODE_ENV === 'development')
-{
-  const functions = getFunctions(app);
-  connectFunctionsEmulator(functions, "localhost", 5001);
-}
+// if (process.env.NODE_ENV === 'development')
+// {
+//   console.warn('Starting in dev mode');
+//   connectFunctionsEmulator(getFunctions(app), "localhost", 5001);
+//   connectAuthEmulator(getAuth(app), "http://127.0.0.1:9099");
+//   connectFirestoreEmulator(getFirestore(), '127.0.0.1', 8082);
+//   connectStorageEmulator(getStorage(), "127.0.0.1", 9199);
+// }
 
 export const auth = getAuth(app);
 export const provider = new GoogleAuthProvider();

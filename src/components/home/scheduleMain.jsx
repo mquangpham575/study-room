@@ -1,27 +1,64 @@
 import React, { useState, useEffect } from 'react';
-import { collection, addDoc, getDocs, deleteDoc, doc } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, arrayUnion, arrayRemove, setDoc } from 'firebase/firestore';
 import { db } from '../dblibs/firebase-config';
 import './scheduleMain.css';
+import { useParams } from 'react-router-dom';
+import { useUserStore } from '../dblibs/userStore';
+import { usePreviewStore } from '../dblibs/previewUserStore';
+import { toast } from 'react-toastify';
 
 export const ScheduleMain = () => {
   const [events, setEvents] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [newEvent, setNewEvent] = useState({ title: '', startTime: '', endTime: '', day: '' });
+  const {currentUser} = useUserStore();
+  const {previewUser, isLoading, curUserMore,
+    fetchPrUserInfo , fetchProfileSubstitute, resetUserInfoForLoading} = usePreviewStore();
+
+  let id = useParams().id;
 
   const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
-  useEffect(() => {
-    const fetchEvents = async () => {
-      const querySnapshot = await getDocs(collection(db, 'events'));
-      const fetchedEvents = querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-      setEvents(fetchedEvents);
-    };
+  useEffect(()=>{
+    if (id === previewUser?.id)
+      fetchProfileSubstitute(id, 'events', []);
+    else {
+      console.log("?!");
+      resetUserInfoForLoading();
+      fetchProfileSubstitute(id, 'events', []);
+      fetchPrUserInfo(id);  
+    }
+  },[id,previewUser,fetchPrUserInfo, fetchProfileSubstitute, resetUserInfoForLoading]);
 
-    fetchEvents();
-  }, []);
+  useEffect(()=>{
+    console.log('restarting', id, curUserMore);
+
+    if (curUserMore?.events)
+      {
+
+        const fetchedEvents = [];
+  
+        daysOfWeek.forEach(x => {
+          let requestedDay = curUserMore.events[x];
+          for (let b in requestedDay)
+            {
+              let event = requestedDay[b];
+              if (event !== undefined)
+                {
+                  event.day = x;
+                  event.time = event.startTime + ' - ' + event.endTime;
+  
+                  fetchedEvents.push(event);
+                }
+            }  
+        })
+  
+        setEvents(fetchedEvents);
+      } else setEvents([]);
+  }, [curUserMore]);
+
+  if (isLoading) return <div className='globalLoad'>LOADING...</div>;
+  if (previewUser == null) return <div className='globalLoad'> NO SUCH USER EXISTS. </div>;
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -37,53 +74,96 @@ export const ScheduleMain = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const startTimeFormatted = formatTime(newEvent.startTime);
-    const endTimeFormatted = formatTime(newEvent.endTime);
-    const time = `${startTimeFormatted} - ${endTimeFormatted}`;
-    const eventToAdd = { ...newEvent, time };
+
+    const eventToAdd = {
+      startTime: formatTime(newEvent.startTime),
+      endTime: formatTime(newEvent.endTime),
+      title: newEvent.title
+    };
 
     try {
-      const docRef = await addDoc(collection(db, 'events'), eventToAdd);
-      setEvents([...events, { id: docRef.id, ...eventToAdd }]);
+      const docRef = doc(db, "events", currentUser.id);
+      const docSnap = await getDoc(docRef);
+
+      if (docSnap.exists())
+      {
+        const upd = {};
+
+        upd[newEvent.day] = arrayUnion(eventToAdd);
+        await updateDoc(docRef, upd);
+      } else {
+        const props = {
+          Monday: [], Tuesday: [], Wednesday: [], 
+          Thursday: [], Friday: [], Saturday: [], 
+        }
+
+        props[newEvent.day].push(eventToAdd);
+
+        await setDoc(docRef, props);
+      }
+
+      setEvents([...events, { ...eventToAdd,
+        time: eventToAdd.startTime + ' - ' + eventToAdd.endTime,
+        day: newEvent.day
+      }]);
+
       setShowForm(false);
-      setNewEvent({ title: '', startTime: '', endTime: '', day: '' });
-      console.log('Event added to Firebase');
+      setNewEvent({ title: '', startTime: '', endTime: '', day: '' });  
+
+      toast.success('Event added successfully!');
     } catch (error) {
-      console.error('Error adding event to Firebase: ', error);
+      toast.error('Failed to add event: ' + error.message);
     }
   };
 
-  const handleDelete = async (id) => {
+  const handleDelete = async (event) => {
     try {
-      await deleteDoc(doc(db, 'events', id));
-      setEvents(events.filter(event => event.id !== id));
-      console.log('Event deleted from Firebase');
+      const docRef = doc(db, "events", currentUser.id);
+      const docSnap = await getDoc(docRef);
+
+      console.log(event);
+
+      if (docSnap.exists())
+      {
+        const upd = {};
+
+        upd[event.day] = arrayRemove({
+          startTime: event.startTime,
+          endTime: event.endTime,
+          title: event.title,
+        });
+
+        await updateDoc(docRef, upd);
+      }
+      
+      setEvents(events.filter(x => x.title !== event.title));
+      toast.success('Event deleted successfully!');
     } catch (error) {
-      console.error('Error deleting event from Firebase: ', error);
+      toast.error('Failed to delete event: ' + error.message);
     }
   };
 
   const Day = ({ day, events }) => (
-    <div className="day">
+    <div className="day" key = {day}>
       <h2>{day}</h2>
       {events.map(event => (
         <div key={event.id} className="event">
-          <button className="delete-button" onClick={() => handleDelete(event.id)}>×</button>
+          <button className="delete-button" onClick={() => handleDelete(event)}>×</button>
           <h3>{event.title}</h3>
           <p>{event.time}</p>
         </div>
       ))}
     </div>
   );
-
+  
   return (
     <div className="Schedule">
       <header>
-        <h1>Weekly Calendar</h1>
+        <h1>{previewUser?.username + "'s Weekly Schedule"}</h1>
       </header>
-      <button className="add-event-button" onClick={() => setShowForm(true)}>
+      {currentUser.id === id && <button className="add-event-button" onClick={() => setShowForm(true)}>
         Add More Event
-      </button>
+      </button>}
       {showForm && (
         <div className="popup-e">
           <button className="close-button-e" onClick={() => setShowForm(false)}>×</button>
