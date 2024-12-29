@@ -167,7 +167,7 @@ export const Auth = (props) => {
                 <button>Sign In</button>
             </form>
         </div>
-        <div className='separator'>
+        <div className='login_separator'>
         </div>
         <div className='item'>
             <h2> Create an account </h2>
@@ -194,14 +194,15 @@ export const Login = () => {
             console.log(auth.currentUser);
             if (!user)
             {
-            resetUserInfo();
-            resetKey();
-            return;
+                resetUserInfo();
+                resetKey();
+                auth.signOut(); 
+                return;
             }
 
             if (id !== null && user.uid !== id)
             {
-                console.warn("I Did logged out btw");
+                console.warn("I Did logged out btw", id, user.uid);
                 resetUserInfo();
                 resetKey();
                 auth.signOut();
@@ -218,7 +219,7 @@ export const Login = () => {
 
     console.log(currentUser);
 
-    if (isLoading) return <div>TEST LOADING</div>;
+    if (isLoading) return <div className = 'globalLoad'>TEST LOADING</div>;
 
     console.log("Final: ", id, ' - keys: ', keys);
 

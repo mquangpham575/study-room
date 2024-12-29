@@ -33,7 +33,7 @@ function App() {
 
   console.log(currentUser);
 
-  if (isLoading) return <div>TEST LOADING</div>;
+  if (isLoading) return <div className = 'globalLoad'>TEST LOADING</div>;
 
   return (
     <div> </div>

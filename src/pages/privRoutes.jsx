@@ -18,7 +18,7 @@ export const PrivRoutes = (props) => {
           return;
         }
 
-        if (id !== null && user.uid !== id)
+        if (id === null || user.uid !== id)
         {
           resetUserInfo();
           resetKey();
@@ -34,7 +34,7 @@ export const PrivRoutes = (props) => {
       }
     },[fetchUserInfo]);
     
-    if (isLoading) return <div>TEST LOADING</div>;
+    if (isLoading) return <div className = 'globalLoad'>TEST LOADING</div>;
   
     console.log("Final: ", id, ' - keys: ', keys);
 

@@ -41,13 +41,13 @@ export const MainHub = (props) => {
 
                 <div className = 'info'>
                     <div className = 'info_container'>
-                        <button className = 'hiddenDropdown' onClick={onClick}>
+                        <button className = 'prof_hiddenDropdown' onClick={onClick}>
                             {currentUser.avatar?
-                                <img className = "forceNoInvert" src = {currentUser.avatar} alt=""/>:
+                                <img src = {currentUser.avatar} alt=""/>:
                                 <img src = {"../png/user.png"} alt=""/>
                             }
                             <p> {currentUser.username} </p>
-                            <img src = {"../png/down.png"} alt=""/>
+                            <img style ={{'filter':'invert(1)'}} src = {"../png/down.png"} alt=""/>
                         </button>
                         <div className="dropdown-content"
                             style = {collState ? { display:"flex" } : { display:"none" }}>

@@ -16,53 +16,6 @@
         font-size: 14px;
         color: white;
     }
-
-    .avatarGradient {
-        width: 75%;
-        height: 100px;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-
-        border-bottom: rgba(255, 255, 255, 0.251) solid 1px;
-
-        button {
-            color: azure;
-            border: none;
-            background-color: transparent;
-            cursor: pointer;
-        }
-
-        img {
-            border-radius: 50%;
-            width: 50px;
-            height: 50px;
-            margin-right: 0;
-            margin-left: 0;
-        }
-
-        .forceNoInvert {
-            filter: invert(0);
-        }
-        
-        margin-bottom: 20px;
-    }
-    
-    .sep {
-        margin: 5px;
-    }
-
-    .buttonTab {
-        height: 30px;
-        width: 90%;
-        display: flex;
-        background-color: rgba(22, 22, 22, 0.5);
-        align-items: center;
-        border-radius: 5px;
-        border: none;
-
-        cursor: pointer;
-    }
     
     img {
         width: 20px;
@@ -72,4 +25,51 @@
         margin-right: 15px;
         margin-left: 5px;
     }
+}
+
+.profiles_avatarGradient {
+    width: 75%;
+    height: 100px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    border-bottom: rgba(255, 255, 255, 0.251) solid 1px;
+
+    button {
+        color: azure;
+        border: none;
+        background-color: transparent;
+        cursor: pointer;
+    }
+
+    img {
+        border-radius: 50%;
+        width: 50px;
+        height: 50px;
+        margin-right: 0;
+        margin-left: 0;
+    }
+
+    .forceNoInvert {
+        filter: invert(0);
+    }
+    
+    margin-bottom: 20px;
+}
+
+.sep {
+    margin: 5px;
+}
+
+.buttonTab {
+    height: 30px;
+    width: 90%;
+    display: flex;
+    background-color: rgba(22, 22, 22, 0.5);
+    align-items: center;
+    border-radius: 5px;
+    border: none;
+
+    cursor: pointer;
 }

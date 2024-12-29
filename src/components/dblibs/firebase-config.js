@@ -18,11 +18,11 @@ const app = initializeApp(firebaseConfig);
 
 // if (process.env.NODE_ENV === 'development')
 // {
-//   console.warn('Starting in dev mode');
-//   connectFunctionsEmulator(getFunctions(app), "localhost", 5001);
-//   connectAuthEmulator(getAuth(app), "http://127.0.0.1:9099");
-//   connectFirestoreEmulator(getFirestore(), '127.0.0.1', 8082);
-//   connectStorageEmulator(getStorage(), "127.0.0.1", 9199);
+  console.warn('Starting in dev mode');
+  connectFunctionsEmulator(getFunctions(app), "localhost", 5001);
+  connectAuthEmulator(getAuth(app), "http://127.0.0.1:9099");
+  connectFirestoreEmulator(getFirestore(), '127.0.0.1', 8082);
+  connectStorageEmulator(getStorage(), "127.0.0.1", 9199);
 // }
 
 export const auth = getAuth(app);

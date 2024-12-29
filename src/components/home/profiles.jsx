@@ -15,13 +15,12 @@ export const Profiles = () => {
 
     return (
         <div className='profiles'>
-                <div className = 'avatarGradient'>
+                <div className = 'profiles_avatarGradient'>
                     <button
                         onClick={() => redirectToPage("/profile/" + currentUser.id)}>
                         {currentUser.avatar?
                             <img className = "forceNoInvert" src = {currentUser.avatar} alt=""/>:
-                            <img src = {"../png/user.png"} alt=""/>
-                        }
+                            <img src = {"../png/user.png"} alt=""/> }
                     </button>
                 </div>
 

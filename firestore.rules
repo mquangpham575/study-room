@@ -69,7 +69,16 @@ service cloud.firestore {
         resMemberList.difference(reqMemberList) == [request.auth.uid].toSet();
       }
 
-      allow update: if request.auth != null && onlyRemoveSelf();
+      function sendOrRemoveMsg()
+      {
+        let diff = request.resource.data.diff(resource.data).affectedKeys();
+        let field = diff.hasOnly(['messages']);
+        
+        return field && math.abs(request.resource.data.messages.size()
+                - resource.data.messages.size()) == 1;
+      }
+
+      allow update: if request.auth != null && (sendOrRemoveMsg() || onlyRemoveSelf());
       allow delete: if request.auth != null && resource.data.owner == request.auth.uid;
       allow create: if false;
       allow read: if request.auth != null && (

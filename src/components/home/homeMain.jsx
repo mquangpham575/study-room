@@ -1,5 +1,5 @@
 import './homeMain.css';
-import { auth, db } from '../dblibs/firebase-config';
+import { db } from '../dblibs/firebase-config';
 import { useUserStore } from '../dblibs/userStore';
 import './mainHub.css';
 import React, {useEffect, useState} from 'react';
@@ -99,6 +99,9 @@ export const HomeMain = () => {
                 const getPub = await getDocs(qPub);
                 const getPriv = await getDocs(qPriv);
     
+                console.log("PUB", getPub);
+                console.log("PRIV", getPriv);
+
                 if (!getPub.empty)
                     setPublicRoom(getPub.docs.map((x)=>{
                         let d = x.data();
@@ -118,7 +121,7 @@ export const HomeMain = () => {
             }
         }
 
-        return ()=>unSub();
+        unSub();
     }, []);
 
     const handleJoinRoom = async (t) => {
@@ -131,10 +134,10 @@ export const HomeMain = () => {
             <h1> WELCOME BACK, {currentUser.username}! </h1>
         </div>
 
-        <div className = "separator"/>
+        <div className = "homeSeparator"/>
         
         <div className = 'searchBar'>
-            <div>
+            <div className = 'compositeSearch'>
             <img src = {"./png/search.png"} alt=""/>
             <form onSubmit={handleSearch} style ={{width: '100%'}}>
                 <input type = 'text'
@@ -179,7 +182,7 @@ export const HomeMain = () => {
                         </button>
                     })}
             </div>
-            <div style = {{'width': '100%', 'height': '1px'}} className = 'separator'/>
+            <div style = {{'width': '100%', 'height': '1px'}} className = 'homeSeparator'/>
 
             <span> Public rooms </span>
             <div className = 'roomDisplay'>

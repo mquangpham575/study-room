@@ -4,160 +4,169 @@
     flex-direction: column;
     align-items: center;
     gap: 10px;
+}
 
-    .mainSection {
-        width: 100%;
+.mainSection {
+    width: 100%;
 
-        h1 {
-            font-weight: bold;
-            font-size: 300%;
-            letter-spacing: 0.2vw;
-        }
-
-        input {
-            border: none;
-            outline: none;
-            color: white;
-            flex: 1;
-            
-        }
+    h1 {
+        font-weight: bold;
+        font-size: 300%;
+        letter-spacing: 0.2vw;
     }
 
-    .roomsDisplay {
+    input {
+        border: none;
+        outline: none;
+        color: white;
+        flex: 1;
+        
+    }
+}
+
+.roomsDisplay {
+    flex: 1;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    color: white;
+    text-shadow: -1px -1px 0 #3e3e3e, 1px -1px 0 #3e3e3e, -1px 1px 0 #3e3e3e, 1px 1px 0 #3e3e3e;
+    font-size: 20px;
+}
+
+.roomDisplay{
+    flex: 1;
+    width: 100%;
+    height: auto;
+    background-color: transparent;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    flex-wrap: wrap;
+    row-gap: 45px;
+}
+
+.room {
+    background-color: rgba(22, 22, 22, 0.8);
+    border-radius: 35px;
+    width: 350px;
+    height: 250px;
+    border: rgba(245, 245, 245, 0.8) solid 2px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+
+    color: white;
+
+    img {
+        object-fit: cover;
+        width: 100%;
+        height: 70%;
+        border-radius: 35px;
+        border-bottom-left-radius: 0px;
+        border-bottom-right-radius: 0px;
+        border-bottom: solid 1px white;
+    }
+
+
+    span {
+        margin-top: 20px;
+        
         flex: 1;
         width: 100%;
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-        color: white;
-        text-shadow: -1px -1px 0 #3e3e3e, 1px -1px 0 #3e3e3e, -1px 1px 0 #3e3e3e, 1px 1px 0 #3e3e3e;
         font-size: 20px;
-
-        .roomDisplay{
-            flex: 1;
-            width: 100%;
-            height: auto;
-            background-color: transparent;
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-            flex-wrap: wrap;
-            row-gap: 45px;
-            
-            .room {
-                background-color: rgba(22, 22, 22, 0.8);
-                border-radius: 35px;
-                width: 350px;
-                height: 250px;
-                border: rgba(245, 245, 245, 0.8) solid 2px;
-                cursor: pointer;
-                display: flex;
-                flex-direction: column;
-                justify-content: center;
-                align-items: center;
-
-                color: white;
-
-                img {
-                    object-fit: cover;
-                    width: 100%;
-                    height: 70%;
-                    border-radius: 35px;
-                    border-bottom-left-radius: 0px;
-                    border-bottom-right-radius: 0px;
-                    border-bottom: solid 1px white;
-                }
-
-
-                span {
-                    margin-top: 20px;
-                    
-                    flex: 1;
-                    width: 100%;
-                    font-size: 20px;
-                }
-            }
-        }    
     }
+}
 
-    .searchBar {
-        width: 100%;
-        height: 30px;
-        display: flex;
+.searchBar {
+    width: 100%;
+    height: 30px;
+    display: flex;
+    background-color: transparent;
+
+    img {
+        margin-left: 5px;
+        width: 20px;
+        height: 20px;
+        object-fit: cover;
+        filter: invert(1);
+    }
+}
+
+.compositeSearch {
+    border: rgba(245, 245, 245, 0.8) solid 2px;
+    flex: 2;
+    height: 100%;
+    display: flex;
+    background-color: rgba(22, 22, 22, 0.5);
+    border-radius: 35px;
+    gap: 5px;
+    align-items: center;
+
+    input {
         background-color: transparent;
+        border: none;
+        outline: none;
         
-        .separator {
-            flex: 2;
-            background-color: transparent;
-            margin-top: 0;
-            margin-bottom: 0;
-            border: none;
-        }
-        
-        div {
-            border: rgba(245, 245, 245, 0.8) solid 2px;
-            flex: 2;
-            height: 100%;
-            display: flex;
-            background-color: rgba(22, 22, 22, 0.5);
-            border-radius: 35px;
-            gap: 5px;
-            align-items: center;
-
-            input {
-                background-color: transparent;
-                border: none;
-                outline: none;
-                
-                color: white;
-                flex: 3;
-            }
-
-        }
-
-        .collapsible {
-            border: rgba(245, 245, 245, 0.8) solid 2px;
-            width: auto;
-            background-color: transparent;
-            display: flex;
-            background-color: rgba(22, 22, 22, 0.5);
-            border-radius: 35px;
-            align-items: center;
-            align-content: space-between;
-            cursor: pointer;
-            padding: 5px;
-            gap: 5px;
-
-            color: rgba(255, 255, 255, 1);
-
-            img {
-                margin-left: 0;
-                width: 25px;
-                height: 25px;
-            }
-            
-            div {
-                width: 0px;
-                padding: 30px;
-            }
-        }
-
-        .collapsible:hover {
-            background-color: #7474748f;
-        }                  
-
-        .content {
-            margin-top: 50px;
-            overflow: hidden;
-            background-color: #f1f1f1;                  
-        }
-
-        img {
-            margin-left: 5px;
-            width: 20px;
-            height: 20px;
-            object-fit: cover;
-            filter: invert(1);
-        }
+        color: white;
+        flex: 3;
     }
+}
+
+.separator {
+    flex: 2;
+    background-color: transparent;
+    margin-top: 0;
+    margin-bottom: 0;
+    border: none;
+}
+
+.homeSeparator {
+    background-color: #ffffffe6;
+    border-radius: 5px;
+    height: 2px;
+    margin-bottom: 20px;
+    margin-top: 20px;
+    opacity: 70%;
+    width: 90%;
+}
+
+.collapsible {
+    border: rgba(245, 245, 245, 0.8) solid 2px;
+    width: auto;
+    background-color: transparent;
+    display: flex;
+    background-color: rgba(22, 22, 22, 0.5);
+    border-radius: 35px;
+    align-items: center;
+    align-content: space-between;
+    cursor: pointer;
+    padding: 5px;
+    gap: 5px;
+
+    color: rgba(255, 255, 255, 1);
+
+    img {
+        margin-left: 0;
+        width: 25px;
+        height: 25px;
+    }
+    
+    div {
+        width: 0px;
+        padding: 30px;
+    }
+}
+
+.collapsible:hover {
+    background-color: #7474748f;
+}                  
+
+.content {
+    margin-top: 50px;
+    overflow: hidden;
+    background-color: #f1f1f1;                  
 }

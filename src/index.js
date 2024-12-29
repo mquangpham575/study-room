@@ -2,8 +2,8 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './App.css';
 
-import {Login} from './pages/login.jsx';
 import {PrivRoutes} from './pages/privRoutes.jsx';
+import {Login} from './pages/login.jsx';
 import { Home } from './pages/home.jsx';
 import { Chat } from './pages/chat.jsx';
 import { Schedule } from './pages/schedule.jsx';
