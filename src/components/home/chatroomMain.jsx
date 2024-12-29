@@ -330,8 +330,8 @@ export const ChatroomMain = () => {
             {open &&
                 <div className = 'chat_findUser'>
                     <div className='chat_findUI'>
-                        <div className='chat_search'>
-                            <div>
+                        <div className='chatroom_search'>
+                            <div className='chatroom_searchInside'>
                                 <img src = {"../png/search.png"} alt=""/>
                                 <form onSubmit={searchUser}>
                                     <input type = 'text' placeholder = 'Search' name = 'name'/>
@@ -380,8 +380,8 @@ export const ChatroomMain = () => {
                     </div>
                 </div>
 
-                <div className='chat_search'>
-                    <div>
+                <div className='chatroom_search'>
+                    <div className = 'chatroom_searchInside'>
                         <img src = {"../png/search.png"} alt=""/>
                         <form>
                             <input type = 'text'

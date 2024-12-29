@@ -252,9 +252,6 @@ export const ChatMain = () => {
 
     const handleScSend = async () => {        
         const chatRef = collection(db, "chats");
-        const userChatsRef = collection(db, "userchats");
-
-        const ids = [currentUser.id, receiver.id];
 
         try {
             await updateDoc(doc(chatRef, chatId), {

@@ -173,7 +173,7 @@
     border-right: rgba(255, 255, 255, 0.251) solid 1px;    
 }
 
-.chat_search {
+.chatroom_search {
     width: 100%; 
     height: 45px;
     background-color: transparent;
@@ -182,36 +182,35 @@
     justify-content: center;
 
     border-bottom: rgba(255, 255, 255, 0.251) solid 1px;        
-    
-    div {
-        padding-left: 7px;
-        padding-right: 7px;
+}
 
-        display: flex;
+.chatroom_searchInside {
+    padding-left: 7px;
+    padding-right: 7px;
 
-        button {
-            background-color: transparent;
-            border: none;
-            cursor: pointer;
-        }
+    display: flex;
 
-        img {
-            filter: invert(1);
-            margin-left: 10px;
-            width: 18px;
-            height: 18px;
-        }
+    button {
+        background-color: transparent;
+        border: none;
+        cursor: pointer;
+    }
 
-        input {
-            margin-left: 5px;
-            margin-right: 5px;
-            width: 100%;
-            border: none;
-            outline: none;
-            background-color: rgba(0, 0, 0, 0.6);
-            color: white;
-            border-radius: 5px;        
-        }
+    img {
+        filter: invert(1);
+        width: 18px;
+        height: 18px;
+    }
+
+    input {
+        margin-left: 5px;
+        margin-right: 5px;
+        width: 100%;
+        border: none;
+        outline: none;
+        background-color: rgba(0, 0, 0, 0.6);
+        color: white;
+        border-radius: 5px;        
     }
 }
 
