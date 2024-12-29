@@ -258,10 +258,15 @@ export function QuizApp({quizId}) {
   const [showAllQuestions, setShowAllQuestions] = useState(false);
 
   useEffect(() => {
+    console.log('i got fired');
+
     if (quizId) return;
     
+    console.log("LOL!!!");
+
     const fetchQuizzes = async () => {
-      const querySnapshot = await getDocs(query(collection(db, 'quizzes'), where("owner", "==", currentUser.id)));
+      const querySnapshot = await getDocs(query(collection(db, 'quizzes'),
+      where("owner", "==", currentUser.id)));
       const fetchedQuizzes = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data()  }));
       
       console.log(fetchedQuizzes);
@@ -269,7 +274,7 @@ export function QuizApp({quizId}) {
       setQuizzes(fetchedQuizzes);
     };
 
-    return ()=>fetchQuizzes();
+    fetchQuizzes();
   }, []);
 
   useEffect(() => {
